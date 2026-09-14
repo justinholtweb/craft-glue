@@ -1,0 +1,26 @@
+{# Shown on an entry's edit screen when Glue has a record of it.
+
+   This is the one thing a merged entry cannot tell you about itself: its revisions begin at the
+   merge and never mention the entry that was absorbed, and the absorbed entry's own history ends
+   without explanation. #}
+<div class="meta read-only">
+    <div class="data">
+        <h5 class="heading">{{ "Glue"|t('glue') }}</h5>
+        <div class="value">
+            {% for row in merges|slice(0, 5) %}
+                <div class="glue-history-plan">
+                    {% if row.targetId == entry.id %}
+                        {{ "Merged from {a} and {b}"|t('glue', {
+                            a: row.aTitle ?? "a deleted entry"|t('glue'),
+                            b: row.bTitle ?? "a deleted entry"|t('glue'),
+                        }) }}
+                    {% else %}
+                        {{ "Merged into {target}"|t('glue', {target: row.targetTitle ?? "a deleted entry"|t('glue')}) }}
+                    {% endif %}
+                    <br>
+                    <span class="light">{{ row.dateCreated|datetime('short') }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>

@@ -1,0 +1,348 @@
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+
+{% do view.registerAssetBundle("justinholtweb\\glue\\web\\assets\\merge\\MergeAsset") %}
+
+{% set title = "Merge entries"|t('glue') %}
+{% set fullPageForm = true %}
+{% set submitButtonLabel = "Merge"|t('glue') %}
+{% set crumbs = [
+    {label: "Entries"|t('app'), url: url('entries')},
+    {label: "Glue"|t('glue'), url: url('glue/history')},
+] %}
+
+{% set a = pair.a %}
+{% set b = pair.b %}
+{% set contested = pair.contestedFields()|length %}
+
+{% set reloadUrl = url('glue/merge', {a: a.id, b: b.id, site: pair.siteId}) %}
+{% set swapUrl = url('glue/merge', {a: b.id, b: a.id, site: pair.siteId, target: plan.target}) %}
+
+{% block content %}
+    {{ actionInput('glue/merge/save') }}
+    {{ hiddenInput('a', a.id) }}
+    {{ hiddenInput('b', b.id) }}
+    {{ hiddenInput('siteId', pair.siteId) }}
+    {{ hiddenInput('sectionId', plan.sectionId) }}
+    {{ hiddenInput('entryTypeId', plan.entryTypeId) }}
+    {{ hiddenInput('preset', plan.preset) }}
+    {{ redirectInput('glue/merge?a=' ~ a.id ~ '&b=' ~ b.id ~ '&site=' ~ pair.siteId) }}
+
+    {% if pair.warnings|length %}
+        <div class="glue-warnings">
+            {% for warning in pair.warnings %}
+                <p class="warning with-icon">{{ warning }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {# ----------------------------------------------------------------- the two entries #}
+
+    <div class="glue-sources">
+        <div class="glue-source" data-glue-side="a">
+            <h2 class="glue-side-label">{{ "A"|t('glue') }}</h2>
+            {{ elementCard(a) }}
+            <p class="light">{{ a.type.name }} · {{ a.section.name }} · {{ a.postDate ? a.postDate|datetime('short') : "No post date"|t('glue') }}</p>
+        </div>
+
+        <div class="glue-swap">
+            <a href="{{ swapUrl }}" class="btn" title="{{ "Swap A and B"|t('glue') }}">{{ "Swap"|t('glue') }}</a>
+        </div>
+
+        <div class="glue-source" data-glue-side="b">
+            <h2 class="glue-side-label">{{ "B"|t('glue') }}</h2>
+            {{ elementCard(b) }}
+            <p class="light">{{ b.type.name }} · {{ b.section.name }} · {{ b.postDate ? b.postDate|datetime('short') : "No post date"|t('glue') }}</p>
+        </div>
+    </div>
+
+    {# ----------------------------------------------------------------- the target #}
+
+    <div class="glue-panel">
+        <h2>{{ "Where the merged entry goes"|t('glue') }}</h2>
+
+        {{ forms.selectField({
+            label: "Write to"|t('glue'),
+            id: 'glue-target',
+            name: 'target',
+            value: plan.target,
+            options: targetOptions,
+            instructions: "A new entry leaves both sources untouched. Merging into a source keeps that entry’s ID, URL and everything that already links to it."|t('glue'),
+            inputAttributes: {'data-glue-reload': 'target'},
+        }) }}
+
+        {% if plan.target == 'new' %}
+            {{ forms.selectField({
+                label: "Section"|t('glue'),
+                id: 'glue-section',
+                name: 'sectionIdChoice',
+                value: plan.sectionId,
+                options: sections,
+                inputAttributes: {'data-glue-reload': 'section'},
+            }) }}
+
+            {{ forms.selectField({
+                label: "Entry type"|t('glue'),
+                id: 'glue-entry-type',
+                name: 'entryTypeIdChoice',
+                value: plan.entryTypeId,
+                options: entryTypes,
+                instructions: "The entry type decides which fields the merged entry can hold."|t('glue'),
+                inputAttributes: {'data-glue-reload': 'entryType'},
+            }) }}
+        {% else %}
+            <p class="light">
+                {{ "The merged entry will be {title}, keeping its ID, URL and inbound links."|t('glue', {
+                    title: plan.target == 'a' ? a.title : b.title,
+                }) }}
+                {{ entryType ? "It stays a {type}."|t('glue', {type: entryType.name}) : '' }}
+            </p>
+        {% endif %}
+
+        {% if presets|length %}
+            <div class="glue-presets">
+                <span class="glue-presets-label">{{ "Preset"|t('glue') }}</span>
+                {% for handle, preset in presets %}
+                    <a class="btn small" href="{{ url('glue/merge', {a: a.id, b: b.id, site: pair.siteId, preset: handle}) }}">{{ preset.name }}</a>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    {# ----------------------------------------------------------------- the fields #}
+
+    <div class="glue-panel">
+        <div class="glue-fields-header">
+            <h2>{{ "Fields"|t('glue') }}</h2>
+
+            <div class="glue-bulk">
+                <button type="button" class="btn small" data-glue-all="a">{{ "All A"|t('glue') }}</button>
+                <button type="button" class="btn small" data-glue-all="b">{{ "All B"|t('glue') }}</button>
+                <button type="button" class="btn small" data-glue-all="combine">{{ "All both"|t('glue') }}</button>
+                <button type="button" class="btn small" data-glue-all="reset">{{ "Reset"|t('glue') }}</button>
+                <button type="button" class="btn small" id="glue-differences-only" aria-pressed="false">
+                    {{ "Only the {n} that differ"|t('glue', {n: contested}) }}
+                </button>
+            </div>
+        </div>
+
+        {% if pair.fields|length %}
+            <table class="data fullwidth glue-table" id="glue-fields">
+                <thead>
+                    <tr>
+                        <th scope="col">{{ "Field"|t('glue') }}</th>
+                        <th scope="col">{{ "A"|t('glue') }}</th>
+                        <th scope="col">{{ "B"|t('glue') }}</th>
+                        <th scope="col" class="glue-choice-col">{{ "Take"|t('glue') }}</th>
+                        <th scope="col">{{ "Result"|t('glue') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for handle, field in pair.fields %}
+                        {% set chosen = plan.choices[handle] ?? field.suggested %}
+                        {% set available = field.availableStrategies() %}
+                        <tr data-glue-row="{{ handle }}" data-glue-contested="{{ field.contested() ? '1' : '0' }}">
+                            <th scope="row">
+                                <span class="glue-field-label">{{ field.label }}</span>
+                                <code class="glue-handle">{{ handle }}</code>
+                                {% if field.warning %}
+                                    <span class="glue-field-warning" data-icon="alert" title="{{ field.warning }}"></span>
+                                {% endif %}
+                            </th>
+
+                            <td class="glue-value" data-glue-pick="{{ handle }}:a">
+                                {% if field.inA %}
+                                    {% include "glue/_preview" with {preview: field.aPreview} only %}
+                                {% else %}
+                                    <span class="glue-empty">{{ "Not on this entry type"|t('glue') }}</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="glue-value" data-glue-pick="{{ handle }}:b">
+                                {% if field.inB %}
+                                    {% include "glue/_preview" with {preview: field.bPreview} only %}
+                                {% else %}
+                                    <span class="glue-empty">{{ "Not on this entry type"|t('glue') }}</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="glue-choice-col">
+                                <div class="glue-choice" role="group" aria-label="{{ field.label }}">
+                                    {% for strategy in ['a', 'b', 'combine', 'blank'] %}
+                                        {% set allowed = strategy in available %}
+                                        {% set id = 'glue-' ~ handle ~ '-' ~ strategy %}
+                                        <input type="radio"
+                                               id="{{ id }}"
+                                               name="choices[{{ handle }}]"
+                                               value="{{ strategy }}"
+                                               {{ chosen == strategy ? 'checked' }}
+                                               {% if field.suggested == strategy %}data-glue-suggested="1"{% endif %}
+                                               {{ not allowed ? 'disabled' }}>
+                                        <label for="{{ id }}"
+                                               class="glue-choice-label{{ not allowed ? ' disabled' }}"
+                                               {% if strategy == 'combine' and field.combineHint %}title="{{ field.combineHint }}"{% endif %}>
+                                            {{ strategy == 'a' ? "A"|t('glue') : (strategy == 'b' ? "B"|t('glue') : (strategy == 'combine' ? "Both"|t('glue') : "Neither"|t('glue'))) }}
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                            </td>
+
+                            <td class="glue-value glue-result" data-glue-result="{{ handle }}">
+                                <span class="glue-empty">{{ "—"|t('glue') }}</span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="light">{{ "The target entry type has no custom fields — only the title, slug and the rest below."|t('glue') }}</p>
+        {% endif %}
+    </div>
+
+    {# ----------------------------------------------------------------- the attributes #}
+
+    <div class="glue-panel">
+        <h2>{{ "Title, slug and the rest"|t('glue') }}</h2>
+
+        <div class="glue-attributes">
+            {{ forms.selectField({
+                label: "Title"|t('glue'),
+                name: 'titleFrom',
+                value: plan.titleFrom,
+                options: [
+                    {label: a.title, value: 'a'},
+                    {label: b.title, value: 'b'},
+                    {label: "Something else"|t('glue'), value: 'custom'},
+                ],
+            }) }}
+
+            {{ forms.textField({
+                label: "New title"|t('glue'),
+                name: 'title',
+                value: plan.title,
+                placeholder: a.title,
+                instructions: "Used when “Something else” is picked above."|t('glue'),
+            }) }}
+
+            {{ forms.selectField({
+                label: "Slug"|t('glue'),
+                name: 'slugFrom',
+                value: plan.slugFrom,
+                options: [
+                    {label: a.slug ?: "A’s slug"|t('glue'), value: 'a'},
+                    {label: b.slug ?: "B’s slug"|t('glue'), value: 'b'},
+                    {label: "Generate from the title"|t('glue'), value: 'auto'},
+                    {label: "Something else"|t('glue'), value: 'custom'},
+                ],
+                instructions: plan.target != 'new'
+                    ? "Changing the slug changes the URL of an entry that already has one."|t('glue')
+                    : null,
+            }) }}
+
+            {{ forms.textField({
+                label: "New slug"|t('glue'),
+                name: 'slug',
+                value: plan.slug,
+                placeholder: a.slug,
+            }) }}
+
+            {{ forms.selectField({
+                label: "Author"|t('glue'),
+                name: 'authorFrom',
+                value: plan.authorFrom,
+                options: [
+                    {label: "A’s author"|t('glue'), value: 'a'},
+                    {label: "B’s author"|t('glue'), value: 'b'},
+                    {label: "Me"|t('glue'), value: 'current'},
+                ],
+            }) }}
+
+            {{ forms.selectField({
+                label: "Post date"|t('glue'),
+                name: 'postDateFrom',
+                value: plan.postDateFrom,
+                options: [
+                    {label: "The earlier of the two"|t('glue'), value: 'earliest'},
+                    {label: "A’s"|t('glue'), value: 'a'},
+                    {label: "B’s"|t('glue'), value: 'b'},
+                    {label: "Now"|t('glue'), value: 'now'},
+                ],
+            }) }}
+
+            {{ forms.selectField({
+                label: "Status"|t('glue'),
+                name: 'statusFrom',
+                value: plan.statusFrom,
+                options: [
+                    {label: "A’s"|t('glue'), value: 'a'},
+                    {label: "B’s"|t('glue'), value: 'b'},
+                    {label: "Enabled"|t('glue'), value: 'enabled'},
+                    {label: "Disabled"|t('glue'), value: 'disabled'},
+                ],
+            }) }}
+
+            {% if a.section.type == 'structure' %}
+                {{ forms.selectField({
+                    label: "Position"|t('glue'),
+                    name: 'parentFrom',
+                    value: plan.parentFrom,
+                    options: [
+                        {label: "Under A’s parent"|t('glue'), value: 'a'},
+                        {label: "Under B’s parent"|t('glue'), value: 'b'},
+                        {label: "At the top level"|t('glue'), value: 'none'},
+                    ],
+                }) }}
+            {% endif %}
+        </div>
+    </div>
+
+    {# ----------------------------------------------------------------- the sources #}
+
+    <div class="glue-panel">
+        <h2>{{ "What happens to the originals"|t('glue') }}</h2>
+
+        {{ forms.selectField({
+            label: "Afterwards"|t('glue'),
+            name: 'disposition',
+            value: plan.disposition,
+            options: dispositionOptions,
+            instructions: "Trashed entries can be restored from the Trash until it is emptied."|t('glue'),
+        }) }}
+
+        {% if isPro %}
+            {{ forms.lightswitchField({
+                label: "Repoint everything that linked to them"|t('glue'),
+                name: 'rewire',
+                on: plan.rewire,
+                instructions: "Every entry, category or asset relating to a retired source is re-saved to relate to the merged entry instead. Reference tags in rich text are not rewritten — Glue will say if it finds any."|t('glue'),
+            }) }}
+
+            {% if pair.sharedSiteIds|length > 1 %}
+                {{ forms.lightswitchField({
+                    label: "Merge in every site"|t('glue'),
+                    name: 'allSites',
+                    on: plan.allSites,
+                    instructions: "Repeats the merge in the {n} sites both entries exist in, resolving each site’s own values rather than copying this one’s."|t('glue', {n: pair.sharedSiteIds|length}),
+                }) }}
+            {% endif %}
+        {% else %}
+            <p class="light glue-upsell">
+                {{ "Glue Pro also repoints everything that linked to the retired entries, saves these choices as a preset, and merges every site at once."|t('glue') }}
+            </p>
+        {% endif %}
+    </div>
+
+    {% if plugin.canManagePresets() %}
+        <div class="glue-panel">
+            <h2>{{ "Save these choices"|t('glue') }}</h2>
+            <div class="glue-preset-save">
+                {{ forms.text({
+                    id: 'glue-preset-name',
+                    placeholder: "Preset name"|t('glue'),
+                }) }}
+                <button type="button" class="btn" id="glue-save-preset">{{ "Save as preset"|t('glue') }}</button>
+            </div>
+            <p class="light">{{ "Presets are stored in project config, so they deploy with the entry types they describe."|t('glue') }}</p>
+        </div>
+    {% endif %}
+{% endblock %}

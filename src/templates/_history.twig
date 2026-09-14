@@ -1,0 +1,89 @@
+{% extends "_layouts/cp" %}
+
+{% do view.registerAssetBundle("justinholtweb\\glue\\web\\assets\\merge\\MergeAsset") %}
+
+{% set title = "Merge history"|t('glue') %}
+{% set selectedSubnavItem = 'history' %}
+
+{% block content %}
+    {% if rows|length %}
+        <p class="light">
+            {{ "A merged entry looks exactly like one somebody typed — this is the only place that says otherwise."|t('glue') }}
+        </p>
+
+        <table class="data fullwidth">
+            <thead>
+                <tr>
+                    <th scope="col">{{ "When"|t('glue') }}</th>
+                    <th scope="col">{{ "Merged"|t('glue') }}</th>
+                    <th scope="col">{{ "Into"|t('glue') }}</th>
+                    <th scope="col">{{ "Sources"|t('glue') }}</th>
+                    <th scope="col">{{ "By"|t('glue') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                    <tr>
+                        <td>{{ row.dateCreated|datetime('short') }}</td>
+
+                        <td>
+                            {% if row.aEntry %}{{ elementChip(row.aEntry, {size: 'small'}) }}{% else %}<span class="glue-empty">{{ row.aTitle ?? "Deleted"|t('glue') }}</span>{% endif %}
+                            <span class="light">+</span>
+                            {% if row.bEntry %}{{ elementChip(row.bEntry, {size: 'small'}) }}{% else %}<span class="glue-empty">{{ row.bTitle ?? "Deleted"|t('glue') }}</span>{% endif %}
+                        </td>
+
+                        <td>
+                            {% if row.targetEntry %}
+                                {{ elementChip(row.targetEntry, {size: 'small'}) }}
+                            {% else %}
+                                <span class="glue-empty">{{ row.targetTitle ?? "Deleted"|t('glue') }}</span>
+                            {% endif %}
+                            <div class="glue-history-plan">
+                                {{ row.createdNew ? "a new entry"|t('glue') : "an existing entry"|t('glue') }}
+                                {%- if row.rewired %} · {{ "{n} rewired"|t('glue', {n: row.rewired}) }}{% endif %}
+                                {%- if row.preset %} · {{ row.preset }}{% endif %}
+                            </div>
+                        </td>
+
+                        <td>
+                            {{ {
+                                leave: "left alone"|t('glue'),
+                                disable: "disabled"|t('glue'),
+                                trash: "trashed"|t('glue'),
+                            }[row.disposition] ?? row.disposition }}
+                        </td>
+
+                        <td>{{ row.username ?? "—" }}</td>
+                    </tr>
+
+                    {% if row.warningList|length %}
+                        <tr>
+                            <td colspan="5">
+                                {% for warning in row.warningList %}
+                                    <p class="warning with-icon">{{ warning }}</p>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if pages > 1 %}
+            <nav class="glue-pagination" aria-label="{{ "Pagination"|t('app') }}">
+                {% if page > 1 %}
+                    <a class="btn" href="{{ url('glue/history', {page: page - 1}) }}">{{ "Previous"|t('app') }}</a>
+                {% endif %}
+                <span class="light">{{ "Page {page} of {pages}"|t('glue', {page: page, pages: pages}) }}</span>
+                {% if page < pages %}
+                    <a class="btn" href="{{ url('glue/history', {page: page + 1}) }}">{{ "Next"|t('app') }}</a>
+                {% endif %}
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="zilch">
+            <p>{{ "Nothing has been merged yet."|t('glue') }}</p>
+            <p class="light">{{ "Select two entries in an entry index and choose “Merge with Glue…” from the actions menu."|t('glue') }}</p>
+        </div>
+    {% endif %}
+{% endblock %}

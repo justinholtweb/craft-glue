@@ -1,0 +1,75 @@
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+
+{% do view.registerAssetBundle("justinholtweb\\glue\\web\\assets\\merge\\MergeAsset") %}
+
+{% set title = "Duplicates"|t('glue') %}
+{% set selectedSubnavItem = 'duplicates' %}
+
+{% set sectionOptions = [{label: "All sections"|t('glue'), value: ''}] %}
+{% for section in sections %}
+    {% set sectionOptions = sectionOptions|merge([{label: section.name, value: section.id}]) %}
+{% endfor %}
+
+{% block content %}
+    <form method="get" action="{{ url('glue/duplicates') }}" class="glue-panel">
+        <div class="glue-attributes">
+            {{ forms.selectField({
+                label: "Section"|t('glue'),
+                name: 'section',
+                value: sectionId,
+                options: sectionOptions,
+            }) }}
+
+            {{ forms.selectField({
+                label: "Matching on"|t('glue'),
+                name: 'by',
+                value: by,
+                options: [
+                    {label: "Title"|t('glue'), value: 'title'},
+                    {label: "Slug"|t('glue'), value: 'slug'},
+                ],
+            }) }}
+
+            {{ hiddenInput('site', siteId) }}
+        </div>
+
+        <button type="submit" class="btn submit">{{ "Find"|t('glue') }}</button>
+
+        <p class="light">
+            {{ "Only exact matches are listed. A fuzzy match finds more pairs and is worse — the cost of a wrong one here is an entry that should not have been merged."|t('glue') }}
+        </p>
+    </form>
+
+    {% if error %}
+        <p class="error with-icon">{{ error }}</p>
+    {% elseif groups|length %}
+        {% for group in groups %}
+            <div class="glue-group">
+                <h3>{{ group.value }} <span class="light">({{ group.count }})</span></h3>
+
+                <div class="glue-group-entries">
+                    {% for entry in group.entries %}
+                        {{ elementChip(entry, {size: 'small'}) }}
+                    {% endfor %}
+                </div>
+
+                {% if group.entries|length >= 2 %}
+                    <p>
+                        <a class="btn small"
+                           href="{{ url('glue/merge', {a: group.entries[0].id, b: group.entries[1].id, site: siteId}) }}">
+                            {{ "Merge the first two"|t('glue') }}
+                        </a>
+                        {% if group.entries|length > 2 %}
+                            <span class="light">{{ "Glue merges two at a time — merge a pair, then pair the result with the next."|t('glue') }}</span>
+                        {% endif %}
+                    </p>
+                {% endif %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="zilch">
+            <p>{{ "No duplicates found."|t('glue') }}</p>
+        </div>
+    {% endif %}
+{% endblock %}

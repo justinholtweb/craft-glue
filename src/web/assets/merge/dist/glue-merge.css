@@ -1,0 +1,289 @@
+/* Glue — the merge screen.
+   Everything here rides on Craft's own CP variables so the screen follows the panel's theme,
+   including dark mode, without a second palette to keep in step. */
+
+.glue-warnings {
+  margin-bottom: 24px;
+}
+
+.glue-warnings .warning {
+  margin: 0 0 8px;
+}
+
+/* -------------------------------------------------------------------- the two entries */
+
+.glue-sources {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.glue-source {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.glue-side-label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--medium-text-color);
+  margin: 0 0 6px;
+}
+
+.glue-swap {
+  align-self: center;
+  padding-top: 18px;
+}
+
+/* -------------------------------------------------------------------- panels */
+
+.glue-panel {
+  background: var(--gray-050, #f9f9f9);
+  border: 1px solid var(--hairline-color);
+  border-radius: var(--large-border-radius, 8px);
+  padding: 18px 20px;
+  margin-bottom: 24px;
+}
+
+.glue-panel > h2 {
+  margin-top: 0;
+}
+
+.glue-fields-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.glue-fields-header h2 {
+  margin: 0;
+}
+
+.glue-bulk {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+#glue-differences-only[aria-pressed='true'] {
+  background-color: var(--gray-200, #cdd8e4);
+}
+
+.glue-presets {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.glue-presets-label {
+  font-size: 12px;
+  color: var(--medium-text-color);
+}
+
+/* -------------------------------------------------------------------- the field table */
+
+.glue-table {
+  margin-top: 14px;
+  table-layout: fixed;
+}
+
+.glue-table th[scope='col'] {
+  white-space: nowrap;
+}
+
+.glue-table td,
+.glue-table th[scope='row'] {
+  vertical-align: top;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.glue-table th[scope='row'] {
+  width: 18%;
+}
+
+.glue-choice-col {
+  width: 190px;
+}
+
+.glue-field-label {
+  display: block;
+  font-weight: 600;
+}
+
+.glue-handle {
+  font-size: 11px;
+  color: var(--medium-text-color);
+  background: none;
+  padding: 0;
+}
+
+.glue-field-warning {
+  color: var(--warning-color, #cf1124);
+  margin-left: 4px;
+}
+
+/* A value cell is a click target for the choice it holds, so it has to look like one. */
+.glue-value {
+  cursor: pointer;
+  border-radius: var(--small-border-radius, 3px);
+}
+
+.glue-result {
+  cursor: default;
+}
+
+.glue-summary {
+  display: block;
+  font-size: 12px;
+  color: var(--medium-text-color);
+}
+
+.glue-body {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-color);
+  word-break: break-word;
+}
+
+.glue-empty {
+  color: var(--light-text-color, #9aa5b1);
+  font-style: italic;
+  font-size: 12px;
+}
+
+.glue-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+/* The chosen side is tinted rather than outlined: an outline on one cell of a dense table reads
+   as an error state, and this is the opposite of one.
+
+   Scoped to `.glue-table` purely for specificity. Craft's own `.data` tables stripe even rows,
+   and that rule carries the same weight as an unscoped `tr[…] td[…]` — so without the extra
+   class the tint appears on odd rows and silently loses on even ones, which looks exactly like
+   the JavaScript failing to fire on half the table. */
+.glue-table tr[data-glue-chosen='a'] td[data-glue-pick$=':a'],
+.glue-table tr[data-glue-chosen='b'] td[data-glue-pick$=':b'],
+.glue-table tr[data-glue-chosen='combine'] td[data-glue-pick] {
+  background: var(--blue-050, #eaf5ff);
+  box-shadow: inset 2px 0 0 var(--primary-color, #0b69a3);
+}
+
+.glue-table tr[data-glue-chosen='blank'] td[data-glue-pick] {
+  opacity: 0.45;
+}
+
+.glue-loading .glue-result {
+  opacity: 0.4;
+}
+
+/* -------------------------------------------------------------------- the radio group */
+
+.glue-choice {
+  display: inline-flex;
+  border: 1px solid var(--hairline-color);
+  border-radius: var(--small-border-radius, 3px);
+  overflow: hidden;
+  background: var(--white, #fff);
+}
+
+.glue-choice input[type='radio'] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.glue-choice-label {
+  padding: 4px 9px;
+  font-size: 12px;
+  cursor: pointer;
+  border-left: 1px solid var(--hairline-color);
+  user-select: none;
+}
+
+.glue-choice-label:first-of-type {
+  border-left: 0;
+}
+
+.glue-choice input[type='radio']:checked + .glue-choice-label {
+  background: var(--primary-color, #0b69a3);
+  color: #fff;
+}
+
+/* Focus has to be visible on the label, because the input it belongs to is not. */
+.glue-choice input[type='radio']:focus-visible + .glue-choice-label {
+  outline: 2px solid var(--primary-color, #0b69a3);
+  outline-offset: -2px;
+}
+
+.glue-choice-label.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* -------------------------------------------------------------------- attributes */
+
+.glue-attributes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0 24px;
+}
+
+.glue-preset-save {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.glue-upsell {
+  margin: 0;
+}
+
+/* -------------------------------------------------------------------- history & duplicates */
+
+.glue-history-plan {
+  font-size: 12px;
+  color: var(--medium-text-color);
+}
+
+.glue-group {
+  border: 1px solid var(--hairline-color);
+  border-radius: var(--large-border-radius, 8px);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+.glue-group h3 {
+  margin: 0 0 8px;
+}
+
+.glue-group-entries {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+@media only screen and (max-width: 991px) {
+  .glue-table th[scope='row'] {
+    width: auto;
+  }
+
+  .glue-choice-col {
+    width: auto;
+  }
+}

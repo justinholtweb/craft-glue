@@ -1,0 +1,22 @@
+{# One field value, small enough for a table cell. Rendered both by the merge screen and by the
+   live-preview endpoint, so the "Result" column is produced by the same template as the two
+   columns it is the answer to. #}
+{% if preview is null %}
+    <span class="glue-empty">—</span>
+{% elseif preview.empty %}
+    <span class="glue-empty">{{ preview.summary }}</span>
+{% else %}
+    <span class="glue-summary">{{ preview.summary }}</span>
+
+    {% if preview.elements|length %}
+        <div class="glue-chips">
+            {% for element in preview.elements %}
+                {{ elementChip(element, {size: 'small', showActionMenu: false}) }}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% if preview.body %}
+        <div class="glue-body">{{ preview.body }}</div>
+    {% endif %}
+{% endif %}

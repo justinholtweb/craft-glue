@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Glue's mark: a PVA bottle with a drop coming off the nozzle.
+
+  The silhouette does the work — narrow cap, flared shoulder, squat body — which is the shape
+  everybody reads as "glue" without being told, and which still reads at 16 pixels, where a CP
+  nav icon actually lives. The two label lines are the second reading: two of something, on the
+  bottle that joins them.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Cap -->
+    <path d="M10.7 6.1 11.4 2.6h1.2l.7 3.5z"/>
+    <!-- Shoulder and body, one outline so the bottle is a single object at small sizes -->
+    <path d="M10.7 6.1v1.5c0 .9-.6 1.4-1.3 2-1.2 1-2.1 2-2.1 3.6V19a2.2 2.2 0 0 0 2.2 2.2h5a2.2 2.2 0 0 0 2.2-2.2v-5.8c0-1.6-.9-2.6-2.1-3.6-.7-.6-1.3-1.1-1.3-2V6.1"/>
+    <!-- Label -->
+    <path d="M9.1 14.7h5.8"/>
+    <path d="M9.1 17.4h3.6"/>
+    <!-- The drop -->
+    <path d="M19 5.9c.9 1.1 1.4 1.9 1.4 2.5a1.4 1.4 0 0 1-2.8 0c0-.6.5-1.4 1.4-2.5z"/>
+</svg>

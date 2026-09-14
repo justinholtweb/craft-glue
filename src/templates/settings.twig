@@ -1,0 +1,127 @@
+{# Glue settings.
+
+   Field names carry NO `settings[…]` prefix. `craft\base\Plugin::settingsResponse()` runs this
+   template through `View::namespaceInputs(…, 'settings')` itself, so a field named
+   `settings[defaultTarget]` posts as `settings[settings][defaultTarget]` and saves nothing — a
+   screen that looks perfect and silently discards every edit. See `[[craft-plugin-gotchas]]`. #}
+{% import "_includes/forms" as forms %}
+
+<h2>{{ "What the merge screen opens with"|t('glue') }}</h2>
+
+{{ forms.selectField({
+    label: "Write to"|t('glue'),
+    name: 'defaultTarget',
+    value: settings.defaultTarget,
+    options: targetOptions,
+    instructions: "A new entry is the only one of the three that cannot lose anything — both sources survive until you say otherwise."|t('glue'),
+}) }}
+
+{{ forms.selectField({
+    label: "Pre-select each field from"|t('glue'),
+    name: 'defaultStrategy',
+    value: settings.defaultStrategy,
+    options: seedOptions,
+    instructions: "“Whichever one has a value” turns the commonest merge — two records of the same thing, one filled in further — into a handful of decisions instead of one per field."|t('glue'),
+}) }}
+
+{{ forms.selectField({
+    label: "Afterwards, the originals are"|t('glue'),
+    name: 'defaultDisposition',
+    value: settings.defaultDisposition,
+    options: dispositionOptions,
+}) }}
+
+<hr>
+
+<h2>{{ "What “Both” does"|t('glue') }}</h2>
+
+{{ forms.textareaField({
+    label: "Plain text separator"|t('glue'),
+    name: 'textSeparator',
+    value: settings.textSeparator,
+    rows: 2,
+    class: 'code',
+    instructions: "Put between two plain-text values joined with “Both”. A blank line by default."|t('glue'),
+}) }}
+
+{{ forms.textareaField({
+    label: "Rich text separator"|t('glue'),
+    name: 'richTextSeparator',
+    value: settings.richTextSeparator,
+    rows: 2,
+    class: 'code',
+    instructions: "A single newline by default. Rich text already carries its own block spacing, and `</p>\\n\\n<p>` renders exactly like `</p>\\n<p>` — only the diff can tell them apart."|t('glue'),
+}) }}
+
+{{ forms.lightswitchField({
+    label: "Drop duplicate table rows"|t('glue'),
+    name: 'dedupeRows',
+    on: settings.dedupeRows,
+    instructions: "When two table fields are combined, skip a row identical to one already above it."|t('glue'),
+}) }}
+
+<hr>
+
+<h2>{{ "What happens to what linked to the originals"|t('glue') }}</h2>
+
+{% if isPro %}
+    {{ forms.lightswitchField({
+        label: "Repoint relations by default"|t('glue'),
+        name: 'rewireRelations',
+        on: settings.rewireRelations,
+        instructions: "Off by default even on Pro: rewiring edits other people’s entries, and a setting that quietly does that on somebody’s first merge is not a good introduction."|t('glue'),
+    }) }}
+
+    {{ forms.textField({
+        label: "Queue rewiring above"|t('glue'),
+        name: 'rewireThreshold',
+        value: settings.rewireThreshold,
+        type: 'number',
+        min: 0,
+        size: 6,
+        instructions: "Each rewire is a full element save. Above this many referencing elements the work goes to the queue instead of the request. 0 never queues."|t('glue'),
+    }) }}
+
+    {{ forms.lightswitchField({
+        label: "Merge every site by default"|t('glue'),
+        name: 'allSites',
+        on: settings.allSites,
+        instructions: "Each site is resolved from its own values rather than propagated, so a translated field is merged in its own language."|t('glue'),
+    }) }}
+{% else %}
+    <p class="light">
+        {{ "Glue Pro repoints every relation that pointed at a retired entry, saves merge presets, merges every site at once, and adds the console commands and the duplicate finder."|t('glue') }}
+    </p>
+{% endif %}
+
+<hr>
+
+<h2>{{ "History"|t('glue') }}</h2>
+
+{{ forms.lightswitchField({
+    label: "Record every merge"|t('glue'),
+    name: 'logMerges',
+    on: settings.logMerges,
+    instructions: "A merged entry looks exactly like one somebody typed. This is the only record that it was not."|t('glue'),
+}) }}
+
+{{ forms.textField({
+    label: "Merges to keep"|t('glue'),
+    name: 'historyLimit',
+    value: settings.historyLimit,
+    type: 'number',
+    min: 0,
+    size: 6,
+    instructions: "Older rows are pruned during garbage collection. 0 keeps everything."|t('glue'),
+}) }}
+
+{% if settings.presets|length %}
+    <hr>
+    <h2>{{ "Presets"|t('glue') }}</h2>
+    <p class="light">{{ "Saved from the merge screen and stored in project config."|t('glue') }}</p>
+    <ul class="glue-preset-list">
+        {% for handle, preset in settings.presets %}
+            <li><strong>{{ preset.name ?? handle }}</strong> <code>{{ handle }}</code></li>
+        {% endfor %}
+    </ul>
+{% endif %}
