@@ -368,6 +368,27 @@ check('a multiline text field combines as text', fn() => $strategies->kindFor($b
 check('a lightswitch does not combine', fn() => $strategies->kindFor($flag, true, false) === Strategy::KIND_NONE);
 check('a number does not combine', fn() => $strategies->kindFor($count, 5, 7) === Strategy::KIND_NONE);
 
+// CKEditor implements ElementContainerFieldInterface whether or not it embeds anything, so a
+// container check alone refuses "Both" on the most common rich text field there is.
+if (class_exists(craft\ckeditor\Field::class)) {
+    $ckeditor = new craft\ckeditor\Field(['handle' => 'glueCk']);
+
+    check('CKEditor prose combines as text', fn() => $strategies->kindFor($ckeditor, '<p>a</p>', '<p>b</p>') === Strategy::KIND_TEXT);
+    check('CKEditor with a nested entry does not combine', fn() => $strategies->kindFor($ckeditor, '<p>a</p><craft-entry data-entry-id="5"></craft-entry>', '<p>b</p>') === Strategy::KIND_NONE);
+}
+
+check('a rich text preview keeps paragraphs apart', function() use ($plugin, $body) {
+    $preview = $plugin->previews->of($body, '<p>The library reopened.</p><p>The work took a year.</p>');
+
+    return str_contains((string)$preview->body, 'reopened. The') ?: (string)$preview->body;
+});
+
+check('a date previews as a date, not a word', function() use ($plugin) {
+    $preview = $plugin->previews->of(new craft\fields\Date(['handle' => 'glueDate']), '2026-03-14T00:00:00-07:00');
+
+    return !str_contains((string)$preview->summary, 'word') ?: (string)$preview->summary;
+});
+
 check('zero is a value, not emptiness', fn() => $strategies->isEmptyValue(0) === false
     && $strategies->isEmptyValue('0') === false
     && $strategies->isEmptyValue(false) === false);
@@ -815,6 +836,57 @@ check('a missing entry is refused', function() use ($plugin, $siteId, $a) {
     }
 
     return 'no exception';
+});
+
+// Loading a pair is reading both entries — every screen that loads one shows their values — so a
+// user who cannot view one must not get it as the other half of a merge.
+check('an entry the user cannot view is refused', function() use ($plugin, $siteId, $a, $b) {
+    $users = Craft::$app->getUser();
+    $previous = $users->getIdentity();
+    $users->setIdentity(new craft\elements\User(['username' => 'glue-nobody', 'admin' => false]));
+
+    try {
+        $plugin->pairs->load((int)$a->id, (int)$b->id, $siteId);
+    } catch (Throwable $e) {
+        return str_contains($e->getMessage(), 'not allowed to view');
+    } finally {
+        $users->setIdentity($previous);
+    }
+
+    return 'no exception';
+});
+
+// A rewire saves elements nobody opened. For a logged-in user it must only touch what that user
+// could have edited by hand — otherwise a merge is a way to put your entry into other people's pages.
+check('a rewire leaves alone what the user cannot edit', function() use ($plugin, $section, $mainType, $topics, $a, $suffix) {
+    $target = makeEntry($section, $mainType, "Rewire target $suffix");
+    $holder = makeEntry($section, $mainType, "Not yours $suffix", [$topics->handle => [$target->id]]);
+
+    $users = Craft::$app->getUser();
+    $previous = $users->getIdentity();
+    $users->setIdentity(new craft\elements\User(['username' => 'glue-nobody', 'admin' => false]));
+    $result = new justinholtweb\glue\models\MergeResult();
+
+    try {
+        $count = $plugin->rewirer->rewire([(int)$target->id], (int)$a->id, $result);
+    } finally {
+        $users->setIdentity($previous);
+    }
+
+    $after = Entry::find()->id($holder->id)->status(null)->one();
+    $ids = $after->getFieldValue($topics->handle)->status(null)->ids();
+
+    if ($count !== 0 || $ids !== [(int)$target->id]) {
+        return sprintf('rewired %d, holder now relates to %s', $count, json_encode($ids));
+    }
+
+    return str_contains(implode(' ', $result->warnings), 'not yours to edit') ?: 'no warning';
+});
+
+check('a field choice must look like a field handle', function() use ($a, $b, $siteId) {
+    $plan = plan((int)$a->id, (int)$b->id, $siteId, ['choices' => ['nested.key' => Strategy::A]]);
+
+    return !$plan->validate(['choices']);
 });
 
 // ---------------------------------------------------------------- presets

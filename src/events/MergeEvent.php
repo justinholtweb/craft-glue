@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace justinholtweb\glue\events;
 
+use craft\events\CancelableEvent;
 use justinholtweb\glue\models\MergePlan;
 use justinholtweb\glue\models\MergeResult;
 use justinholtweb\glue\models\Pair;
-use craft\events\CancelableEvent;
 
 /**
  * Raised around a merge.

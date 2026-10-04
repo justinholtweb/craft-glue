@@ -91,6 +91,10 @@ class Presets extends Component
             throw new InvalidArgumentException(Craft::t('glue', 'A preset needs a name.'));
         }
 
+        if (!$plan->validate(['choices'])) {
+            throw new InvalidArgumentException(implode(' ', $plan->getErrorSummary(true)));
+        }
+
         $handle ??= $this->uniqueHandle($name);
 
         $presets = $this->all();
@@ -188,6 +192,12 @@ class Presets extends Component
      */
     private function write(array $presets): void
     {
+        // Presets live in project config. Writing it where admin changes are off puts the database
+        // out of step with the YAML, and the next deploy quietly undoes the change.
+        if (!Craft::$app->getConfig()->getGeneral()->allowAdminChanges) {
+            throw new InvalidArgumentException(Craft::t('glue', 'Presets are stored in project config, and admin changes are turned off in this environment. Save presets in development and deploy them.'));
+        }
+
         $plugin = Plugin::getInstance();
 
         // The whole settings array, never just the changed key. `savePluginSettings()` replaces

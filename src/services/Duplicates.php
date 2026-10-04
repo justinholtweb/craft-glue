@@ -38,6 +38,9 @@ class Duplicates extends Component
     /**
      * Groups of entries sharing a title or a slug.
      *
+     * @param int[]|null $withinSectionIds Sections the caller may see; null for no limit (the
+     * console). Applied in the query, so a section the user cannot view never contributes a group
+     * — not even its count.
      * @return array<int, array{value: string, ids: int[], titles: array<int, string>, count: int}>
      */
     public function find(
@@ -45,6 +48,7 @@ class Duplicates extends Component
         ?int $siteId = null,
         string $by = self::BY_TITLE,
         int $limit = 100,
+        ?array $withinSectionIds = null,
     ): array {
         $this->assertPro();
 
@@ -74,6 +78,14 @@ class Duplicates extends Component
 
         if ($sectionId !== null) {
             $base->andWhere(['en.sectionId' => $sectionId]);
+        }
+
+        if ($withinSectionIds !== null) {
+            if ($withinSectionIds === []) {
+                return [];
+            }
+
+            $base->andWhere(['en.sectionId' => $withinSectionIds]);
         }
 
         $groups = (clone $base)

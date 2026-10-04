@@ -175,8 +175,8 @@ class GlueController extends Controller
             return ExitCode::UNSPECIFIED_ERROR;
         }
 
-        $this->stdout(sprintf('A: %s (%d)' . PHP_EOL, $pair->a?->title ?? '?', (int)$pair->a?->id));
-        $this->stdout(sprintf('B: %s (%d)' . PHP_EOL . PHP_EOL, $pair->b?->title ?? '?', (int)$pair->b?->id));
+        $this->stdout(sprintf('A: %s (%d)' . PHP_EOL, $pair->a->title ?? '?', (int)$pair->a?->id));
+        $this->stdout(sprintf('B: %s (%d)' . PHP_EOL . PHP_EOL, $pair->b->title ?? '?', (int)$pair->b?->id));
 
         $merger = Plugin::getInstance()->merger;
 
@@ -188,8 +188,8 @@ class GlueController extends Controller
             $this->stdout(sprintf(
                 '%-5s  A: %-28s B: %s' . PHP_EOL,
                 strtoupper($strategy),
-                $this->clip($fieldPair->aPreview?->summary ?? ''),
-                $this->clip($fieldPair->bPreview?->summary ?? ''),
+                $this->clip($fieldPair->aPreview->summary ?? ''),
+                $this->clip($fieldPair->bPreview->summary ?? ''),
             ));
         }
 

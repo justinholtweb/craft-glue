@@ -13,6 +13,7 @@ use craft\fields\BaseRelationField;
 use craft\fields\Matrix;
 use craft\fields\Table;
 use craft\fields\Url;
+use craft\helpers\Json;
 use justinholtweb\glue\models\FieldPair;
 use justinholtweb\glue\models\MergePlan;
 use justinholtweb\glue\models\Strategy;
@@ -75,8 +76,15 @@ class Strategies extends Component
         // Addresses, ContentBlock, CKEditor-with-entries: they hold nested elements but none of
         // them has Matrix's `sortOrder`/`entries` input shape, so there is no way to say "A's
         // then B's" that is guaranteed to copy rather than re-own. Refused rather than guessed.
+        //
+        // Except rich text that holds none. CKEditor implements the interface because it *can*
+        // embed entries, so every CKEditor field is a container whether or not it has one —
+        // refusing them all would refuse the most common field there is. Prose with no
+        // `<craft-entry>` in it is just prose, and joins like any other text.
         if ($field instanceof ElementContainerFieldInterface) {
-            return Strategy::KIND_NONE;
+            return $this->isTextField($field) && !$this->embedsEntries($aValue) && !$this->embedsEntries($bValue)
+                ? Strategy::KIND_TEXT
+                : Strategy::KIND_NONE;
         }
 
         if ($field instanceof Table) {
@@ -129,6 +137,15 @@ class Strategies extends Component
             || $type === MysqlSchema::TYPE_LONGTEXT
             || $type === MysqlSchema::TYPE_MEDIUMTEXT
             || str_starts_with($type, Schema::TYPE_TEXT);
+    }
+
+    /**
+     * Whether a serialized rich text value carries a nested entry, which CKEditor writes as a
+     * `<craft-entry data-entry-id="…">` tag. Anything that is not a string carries none we can see.
+     */
+    private function embedsEntries(mixed $value): bool
+    {
+        return is_string($value) && stripos($value, '<craft-entry') !== false;
     }
 
     /**
@@ -209,8 +226,6 @@ class Strategies extends Component
      * `array_unique()` would get right by string coercion. Both of those also reorder or reindex;
      * a relation field's order is content, so neither is used.
      *
-     * @param array<int, mixed> $a
-     * @param array<int, mixed> $b
      * @return array<int, mixed>
      */
     private function combineList(mixed $a, mixed $b): array
@@ -396,6 +411,12 @@ class Strategies extends Component
             return $value->format(\DateTimeInterface::ATOM);
         }
 
-        return $value === null ? null : Craft::$app->getFormatter()->asText($value);
+        if ($value === null) {
+            return null;
+        }
+
+        // Anything else a field serializes to is an object. asText() would throw on one that is
+        // not a string or date, and a digest must never stop a merge screen from loading.
+        return $value instanceof \Stringable ? (string)$value : Json::encode($value);
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace justinholtweb\glue\jobs;
 
 use Craft;
+use craft\elements\User;
 use craft\queue\BaseJob;
 use justinholtweb\glue\Plugin;
 use Throwable;
@@ -30,16 +31,29 @@ class RewireRelations extends BaseJob
 
     public int $survivorId = 0;
 
+    /**
+     * Who asked for the rewire. The job runs with no user, so without this the permission
+     * filter applied when it was queued would not hold for anything that changed since.
+     */
+    public ?int $userId = null;
+
     public function execute($queue): void
     {
         $rewirer = Plugin::getInstance()->rewirer;
         $total = count($this->elementIds);
+        $user = $this->userId !== null ? User::find()->id($this->userId)->status(null)->one() : null;
+
+        // The user was deleted while the job waited. Nobody is left to act for, so nothing runs.
+        if ($this->userId !== null && $user === null) {
+            Craft::warning(sprintf('Skipping a rewire onto %d: user %d no longer exists.', $this->survivorId, $this->userId), Plugin::LOG_CATEGORY);
+            return;
+        }
 
         foreach (array_values($this->elementIds) as $index => $elementId) {
             $this->setProgress($queue, $total > 0 ? ($index + 1) / $total : 1);
 
             try {
-                $rewirer->rewireElement((int)$elementId, $this->retiredIds, $this->survivorId);
+                $rewirer->rewireElement((int)$elementId, $this->retiredIds, $this->survivorId, $user);
             } catch (Throwable $e) {
                 Craft::error(sprintf(
                     'Could not rewire element %d onto %d: %s',

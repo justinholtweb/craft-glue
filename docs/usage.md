@@ -1,4 +1,9 @@
-# Using Glue
+---
+title: Using Glue
+slug: usage
+order: 20
+summary: The merge screen, choosing a target, and what happens to the originals.
+---
 
 ## Starting a merge
 
@@ -103,7 +108,8 @@ share. Each site is resolved from its own values rather than propagated from the
 translatable field merged in French uses the French values, which is the difference between a
 merge and an overwrite with English.
 
-If the two entries have no second site in common, Glue says so and merges the one.
+If the two entries have no second site in common, Glue says so and merges the one. If you cannot
+edit one of the shared sites, Glue refuses the whole merge rather than skipping that site.
 
 ## Presets — Pro
 
@@ -112,7 +118,8 @@ choice, the attribute sources and the disposition — under a name. Saved preset
 at the top of the screen for the next pair.
 
 Presets live in project config, so they are reviewed in a pull request and deploy with the entry
-types they describe.
+types they describe. That also means they are saved where admin changes are allowed — usually
+development — and the panel for saving them does not appear anywhere else.
 
 A preset replayed against an entry type it was not written for applies what it recognises and
 leaves the rest to the pre-selection rule. It does not empty fields it has never heard of.

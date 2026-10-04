@@ -9,9 +9,11 @@ use craft\base\ElementInterface;
 use craft\base\FieldInterface;
 use craft\fields\BaseOptionsField;
 use craft\fields\BaseRelationField;
+use craft\fields\Date;
 use craft\fields\Lightswitch;
 use craft\fields\Matrix;
 use craft\fields\Table;
+use craft\helpers\DateTimeHelper;
 use craft\helpers\StringHelper;
 use justinholtweb\glue\models\Preview;
 use justinholtweb\glue\Plugin;
@@ -98,6 +100,22 @@ class Previews extends Component
         if ($field instanceof BaseOptionsField) {
             $this->describeOptions($field, $value, $preview);
             return;
+        }
+
+        // A Date field serializes to an ISO 8601 string, which describeText() would count as one
+        // word. Shown the way the CP shows it instead.
+        if ($field instanceof Date && is_string($value)) {
+            $date = DateTimeHelper::toDateTime($value);
+
+            if ($date !== false) {
+                $formatter = Craft::$app->getFormatter();
+                $preview->summary = match (true) {
+                    !$field->showDate => $formatter->asTime($date, 'short'),
+                    $field->showTime => $formatter->asDatetime($date, 'short'),
+                    default => $formatter->asDate($date, 'short'),
+                };
+                return;
+            }
         }
 
         if (is_string($value)) {
@@ -233,7 +251,10 @@ class Previews extends Component
 
     private function describeText(string $value, Preview $preview): void
     {
-        $plain = trim(preg_replace('/\s+/u', ' ', strip_tags($value)) ?? '');
+        // Block tags become spaces first, or strip_tags() runs one paragraph into the next
+        // ("history.The work") and the word count comes out short.
+        $spaced = preg_replace('/<(?:\/?(?:p|div|h[1-6]|li|ul|ol|blockquote|pre|figure|figcaption|tr|td|th)\b[^>]*|br\s*\/?)>/i', ' $0', $value) ?? $value;
+        $plain = trim(preg_replace('/\s+/u', ' ', strip_tags($spaced)) ?? '');
 
         if ($plain === '') {
             // Markup with no words in it — an empty paragraph, a lone image. Not nothing, but

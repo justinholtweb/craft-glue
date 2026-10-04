@@ -47,11 +47,16 @@ class DuplicatesController extends Controller
         $by = (string)$request->getQueryParam('by', Duplicates::BY_TITLE);
         $siteId = (int)($request->getQueryParam('site') ?: Craft::$app->getSites()->getCurrentSite()->id);
 
+        // Only sites this user can edit, the same list the CP's own site menu offers.
+        if (!in_array($siteId, Craft::$app->getSites()->getEditableSiteIds(), true)) {
+            throw new ForbiddenHttpException(Craft::t('glue', 'You are not allowed to edit that site.'));
+        }
+
         $groups = [];
         $error = null;
 
         try {
-            $groups = Plugin::getInstance()->duplicates->find($sectionId, $siteId, $by);
+            $groups = Plugin::getInstance()->duplicates->find($sectionId, $siteId, $by, 100, $this->viewableSectionIds());
         } catch (Throwable $e) {
             $error = $e->getMessage();
         }
@@ -88,13 +93,40 @@ class DuplicatesController extends Controller
             ->indexBy('id')
             ->all();
 
-        foreach ($groups as &$group) {
+        $elements = Craft::$app->getElements();
+        $out = [];
+
+        foreach ($groups as $group) {
+            // Section access is settled in the query; this catches the rest — peer entries,
+            // per-entry rules from other plugins. A group with one visible member is not a
+            // duplicate as far as this user is concerned, and listing it would leak the other.
             $group['entries'] = array_values(array_filter(array_map(
                 fn(int $id) => $entries[$id] ?? null,
                 $group['ids'],
-            )));
+            ), fn(?Entry $entry) => $entry !== null && $elements->canView($entry)));
+
+            if (count($group['entries']) >= 2) {
+                $out[] = $group;
+            }
         }
 
-        return $groups;
+        return $out;
+    }
+
+    /**
+     * @return int[]
+     */
+    private function viewableSectionIds(): array
+    {
+        $user = Craft::$app->getUser()->getIdentity();
+        $ids = [];
+
+        foreach (Craft::$app->getEntries()->getAllSections() as $section) {
+            if ($user?->can("viewEntries:$section->uid")) {
+                $ids[] = (int)$section->id;
+            }
+        }
+
+        return $ids;
     }
 }

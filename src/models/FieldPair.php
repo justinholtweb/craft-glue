@@ -55,7 +55,7 @@ class FieldPair extends Model
 
     public function bothEmpty(): bool
     {
-        return ($this->aPreview?->empty ?? true) && ($this->bPreview?->empty ?? true);
+        return ($this->aPreview->empty ?? true) && ($this->bPreview->empty ?? true);
     }
 
     /**

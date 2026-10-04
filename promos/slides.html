@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<!-- handmade: hand-tuned deck -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Glue — Plugin Store promos</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --charcoal: #0f0f1a;
+    --accent: #2E5BBA;
+    --accent-light: #8FB0F0;
+    --gold: #ffd166;
+    --off-white: #f0f0f5;
+  }
+
+  html { background: #000; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: var(--off-white);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---- slide shell ---------------------------------------------------- */
+  .slide {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse at 85% 15%, rgba(46, 91, 186, 0.36) 0%, transparent 40%),
+      radial-gradient(ellipse at 65% 5%,  rgba(143, 176, 240, 0.14) 0%, transparent 35%),
+      radial-gradient(ellipse at 15% 85%, rgba(255, 209, 102, 0.07) 0%, transparent 40%),
+      radial-gradient(ellipse at 35% 95%, rgba(46, 91, 186, 0.16) 0%, transparent 35%),
+      linear-gradient(135deg, #0f0f1a 0%, #0f1424 30%, #111a2e 60%, #0f0f1a 100%);
+  }
+
+  /* The bottle without its tile, anchored bottom-right and running off both edges so it reads
+     as texture rather than as a second icon. Off on the cover, where it shadows the real one. */
+  .slide::after {
+    content: '';
+    position: absolute;
+    top: 20%;
+    right: -18%;
+    width: 1400px;
+    height: 1400px;
+    background: url('assets/watermark.svg') no-repeat center / contain;
+    opacity: 0.022;
+    pointer-events: none;
+  }
+  .cover::after { display: none; }
+
+  .slide::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 6px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-light), var(--gold), var(--accent));
+    z-index: 5;
+  }
+
+  .inner {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    padding: 118px 130px;
+    display: flex;
+    align-items: center;
+  }
+
+  /* ---- type ------------------------------------------------------------ */
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: rgba(240, 240, 245, 0.62);
+    margin-bottom: 34px;
+  }
+  .eyebrow .rule { width: 58px; height: 3px; border-radius: 2px; background: var(--accent-light); }
+  .eyebrow .pro {
+    font-size: 16px; letter-spacing: 0.14em; color: #1a1300; background: var(--gold);
+    border-radius: 999px; padding: 6px 14px; font-weight: 700;
+  }
+
+  h1, h2 {
+    font-family: 'Jersey 20', sans-serif;
+    font-weight: 400;
+    line-height: 0.9;
+    letter-spacing: 0.005em;
+  }
+
+  .gradient-text {
+    background: linear-gradient(100deg, #5A86E6 0%, #8FB0F0 38%, #ffd166 68%, #5A86E6 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .lede { font-size: 34px; line-height: 1.5; color: rgba(240, 240, 245, 0.72); }
+  .mono { font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace; }
+
+  /* ---- cover ----------------------------------------------------------- */
+  .cover .inner { gap: 90px; }
+  .cover .copy { flex: 1 1 auto; }
+  .cover h1 { font-size: 200px; margin-bottom: 22px; }
+  .cover .tagline { font-size: 50px; line-height: 1.2; color: rgba(240, 240, 245, 0.84); margin-bottom: 26px; }
+  .cover .sub { font-size: 30px; line-height: 1.45; color: rgba(240, 240, 245, 0.58); max-width: 900px; margin-bottom: 46px; }
+  .cover .badges { display: flex; gap: 18px; align-items: center; }
+  .badge {
+    font-size: 24px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 14px 26px; border-radius: 999px; border: 2px solid rgba(143, 176, 240, 0.45);
+    color: rgba(240, 240, 245, 0.85);
+  }
+  .badge.solid { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .cover .mark img { width: 420px; height: 420px; display: block; }
+
+  .points { list-style: none; margin-top: 40px; display: flex; flex-direction: column; gap: 20px; }
+  .points li { display: flex; gap: 16px; font-size: 25px; line-height: 1.4; color: rgba(240, 240, 245, 0.62); }
+  .points li svg { flex: 0 0 auto; margin-top: 4px; }
+
+  /* ---- control-panel screenshot cards (shared family pattern) ---------- */
+  .cpcard .cpc-inner {
+    position: relative; z-index: 2; height: 100%; padding: 112px 110px 112px 120px;
+    display: flex; align-items: center; gap: 64px;
+  }
+  .cpcard .cpc-copy { width: 600px; flex: 0 0 600px; }
+  .cpcard .cpc-eyebrow {
+    display: flex; align-items: center; gap: 20px; margin-bottom: 34px; font-size: 21px; font-weight: 600;
+    letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent-light);
+  }
+  .cpcard .cpc-eyebrow i { display: block; width: 62px; height: 3px; background: var(--accent-light); border-radius: 2px; }
+  .cpcard .cpc-h2 { font-family: 'Jersey 20', 'Inter', sans-serif; font-size: 88px; line-height: 0.96; font-weight: 400; margin: 0 0 28px; }
+  .cpcard .cpc-lede { font-size: 31px; line-height: 1.45; color: rgba(240, 240, 245, 0.68); }
+  .cpcard .cpc-points { list-style: none; margin: 38px 0 0; }
+  .cpcard .cpc-points li { display: flex; gap: 16px; font-size: 25px; line-height: 1.5; color: rgba(240, 240, 245, 0.72); margin-bottom: 16px; }
+  .cpcard .cpc-points li::before { content: ''; flex: 0 0 auto; width: 10px; height: 10px; margin-top: 14px; border-radius: 50%; background: var(--accent-light); }
+  .cpcard .cpc-panel { flex: 1 1 auto; min-width: 0; }
+
+  .cpc-frame {
+    border-radius: 14px; overflow: hidden; background: #e4edf6; border: 1px solid rgba(255, 255, 255, 0.10);
+    box-shadow: 0 40px 90px rgba(0, 0, 0, 0.55), 0 6px 18px rgba(0, 0, 0, 0.35);
+  }
+  .cpc-chrome {
+    display: flex; align-items: center; gap: 9px; padding: 13px 18px;
+    background: linear-gradient(180deg, #2a2a3d 0%, #21212f 100%); border-bottom: 1px solid rgba(0, 0, 0, 0.35);
+  }
+  .cpc-chrome b { width: 12px; height: 12px; border-radius: 50%; }
+  .cpc-chrome b:nth-child(1) { background: #ff5f57; }
+  .cpc-chrome b:nth-child(2) { background: #febc2e; }
+  .cpc-chrome b:nth-child(3) { background: #28c840; }
+  .cpc-chrome em { margin-left: 12px; font-style: normal; font-size: 19px; color: rgba(240, 240, 245, 0.45); }
+  .cpc-frame img { display: block; width: 100%; height: auto; }
+
+  /* ---- "Both" table (slide 3) ------------------------------------------ */
+  .both {
+    position: absolute; right: 110px; top: 50%; transform: translateY(-50%); width: 1000px;
+    border-radius: 14px; border: 1px solid rgba(255,255,255,0.09); background: rgba(15, 15, 26, 0.74); padding: 34px 44px;
+  }
+  .both table { width: 100%; border-collapse: collapse; }
+  .both th, .both td { text-align: left; padding: 19px 10px; font-size: 24px; line-height: 1.35; border-bottom: 1px solid rgba(255,255,255,0.07); vertical-align: top; }
+  .both thead th { font-size: 17px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(240,240,245,0.45); font-weight: 600; padding-top: 0; }
+  .both td.kind { color: var(--off-white); font-weight: 600; width: 360px; }
+  .both td.means { color: rgba(240,240,245,0.68); }
+  .both tr.key td { background: rgba(46, 91, 186, 0.22); }
+  .both tr.key td.means b { color: var(--gold); font-weight: 600; }
+  .both tr.no td { color: rgba(240,240,245,0.38); }
+  .both tr:last-child td { border-bottom: 0; }
+
+  /* ---- rewire diagram (slide 4) ---------------------------------------- */
+  .rewire { position: absolute; right: 110px; top: 50%; transform: translateY(-50%); width: 960px; }
+  .rewire .row { display: flex; align-items: center; gap: 26px; margin-bottom: 20px; }
+  .node {
+    border-radius: 12px; border: 1px solid rgba(255,255,255,0.10); background: rgba(15,15,26,0.78);
+    padding: 20px 26px; font-size: 24px; color: rgba(240,240,245,0.82); white-space: nowrap;
+  }
+  .node small { display: block; font-size: 17px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(240,240,245,0.42); margin-bottom: 6px; }
+  .node.src { width: 370px; }
+  .arrowline { flex: 1 1 auto; height: 3px; background: linear-gradient(90deg, rgba(143,176,240,0.2), var(--accent-light)); position: relative; }
+  .arrowline::after { content: ''; position: absolute; right: -2px; top: -7px; border: 8px solid transparent; border-left: 12px solid var(--accent-light); }
+  .node.target { width: 440px; border-color: var(--accent-light); background: rgba(46, 91, 186, 0.28); }
+  .node.retired { width: 440px; color: rgba(240,240,245,0.38); text-decoration: line-through; text-decoration-color: rgba(255,107,107,0.6); }
+  .rewire .note {
+    margin-top: 34px; border-radius: 12px; border: 1px dashed rgba(255,209,102,0.45); padding: 22px 26px;
+    font-size: 22px; line-height: 1.5; color: rgba(240,240,245,0.62);
+  }
+  .rewire .note b { color: var(--gold); font-weight: 600; }
+
+  /* ---- two screenshots (slide 5) --------------------------------------- */
+  .pair .inner { flex-direction: column; align-items: flex-start; justify-content: flex-start; padding-top: 84px; padding-bottom: 40px; }
+  .pair h2 { font-size: 80px; margin-bottom: 14px; }
+  .pair .lede { font-size: 29px; max-width: 1660px; margin-bottom: 34px; }
+  .pair .panes { display: flex; gap: 52px; width: 100%; align-items: flex-start; }
+  .pair .pane.index { flex: 0 0 760px; }
+  .pair .pane { flex: 1 1 0; min-width: 0; }
+  .pair .caption { font-size: 21px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(240,240,245,0.5); margin-bottom: 14px; display: flex; gap: 14px; align-items: center; }
+  .pair .caption b { color: var(--accent-light); font-weight: 600; }
+  .pair .caption .pro { font-size: 14px; letter-spacing: 0.14em; color: #1a1300; background: var(--gold); border-radius: 999px; padding: 4px 11px; font-weight: 700; }
+
+  /* ---- editions (slide 7) ---------------------------------------------- */
+  .closing .inner { flex-direction: column; align-items: flex-start; justify-content: center; }
+  .closing h2 { font-size: 100px; margin-bottom: 22px; }
+  .closing .lede { font-size: 29px; max-width: 1400px; margin-bottom: 44px; }
+  .closing .eds { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; width: 1660px; }
+  .ed { border-radius: 16px; border: 1px solid rgba(255,255,255,0.09); background: rgba(37, 37, 64, 0.42); padding: 36px 42px; }
+  .ed.pro { border-color: rgba(143,176,240,0.55); background: rgba(46, 91, 186, 0.18); }
+  .ed header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 22px; }
+  .ed header b { font-family: 'Jersey 20', sans-serif; font-weight: 400; font-size: 64px; }
+  .ed header span { font-size: 40px; font-weight: 700; color: var(--gold); }
+  .ed ul { list-style: none; display: flex; flex-direction: column; gap: 13px; }
+  .ed li { display: flex; gap: 14px; font-size: 24px; line-height: 1.4; color: rgba(240,240,245,0.72); }
+  .ed li svg { flex: 0 0 auto; margin-top: 5px; }
+  .ed li.all { color: rgba(240,240,245,0.5); font-style: italic; }
+
+  /* ---- footer lockup --------------------------------------------------- */
+  .footer {
+    position: absolute; left: 130px; bottom: 54px; z-index: 4; display: flex; align-items: center; gap: 16px;
+    font-size: 22px; color: rgba(240, 240, 245, 0.42);
+  }
+  .footer img { width: 40px; height: 40px; border-radius: 9px; }
+  .footer b { color: rgba(240, 240, 245, 0.72); font-weight: 600; }
+
+  body.single .slide { display: none; }
+  body.single .slide.active { display: block; }
+</style>
+</head>
+<body>
+
+<!-- 1 · Cover ============================================================ -->
+<section class="slide cover" data-n="1">
+  <div class="inner">
+    <div class="copy">
+      <div class="eyebrow"><span class="rule"></span> Craft CMS 5</div>
+      <h1 class="gradient-text">Glue</h1>
+      <p class="tagline">Two entries in, one entry out.</p>
+      <p class="sub">Pick a winner field by field — or take both, where both means something — and repoint everything that linked to the entry you retired.</p>
+      <div class="badges">
+        <span class="badge solid">Lite $59</span>
+        <span class="badge solid">Pro $79</span>
+        <span class="badge">No build step</span>
+      </div>
+    </div>
+    <div class="mark"><img src="assets/icon.svg" alt=""></div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Glue</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-glue</div>
+</section>
+
+<!-- 2 · The merge screen (real CP screenshot) ============================ -->
+<section class="slide cpcard" data-n="2">
+  <div class="cpc-inner">
+    <div class="cpc-copy">
+      <div class="cpc-eyebrow"><i></i> The merge screen</div>
+      <h2 class="cpc-h2">A winner,<br>field by field</h2>
+      <p class="cpc-lede">The two entries side by side, one row per field. The Result column is the merge, run for real and not saved.</p>
+      <ul class="cpc-points">
+        <li>Every choice starts on whichever side has a value</li>
+        <li>Into a new entry, or into either source</li>
+        <li>Fields the target can’t hold are named before you press the button</li>
+      </ul>
+    </div>
+    <div class="cpc-panel">
+      <figure class="cpc-frame">
+        <div class="cpc-chrome"><b></b><b></b><b></b><em>Glue → Merge entries</em></div>
+        <img src="shots/glue-merge.png" alt="">
+      </figure>
+    </div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Glue</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-glue</div>
+</section>
+
+<!-- 3 · What "Both" means ================================================= -->
+<section class="slide feature" data-n="3">
+  <div class="inner">
+    <div class="copy" style="width: 600px;">
+      <div class="eyebrow"><span class="rule"></span> Combining</div>
+      <h2 style="font-size: 104px; margin-bottom: 30px;">What “Both”<br>means</h2>
+      <p class="lede" style="max-width: 580px; font-size: 31px;">It depends on the field, and the screen says which before you pick it.</p>
+      <ul class="points">
+        <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8FB0F0" stroke-width="3"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg> <span>Third-party fields classified by what they serialize to</span></li>
+      </ul>
+    </div>
+  </div>
+  <div class="both">
+    <table>
+      <thead><tr><th>Field</th><th>“Both” means</th></tr></thead>
+      <tbody>
+        <tr><td class="kind">Entries, Categories, Assets, Tags, Users</td><td class="means">Both lists, A’s order first, duplicates dropped</td></tr>
+        <tr><td class="kind">Checkboxes, Multi-select</td><td class="means">Both sets of options, duplicates dropped</td></tr>
+        <tr class="key"><td class="kind">Matrix</td><td class="means">A’s blocks, then B’s. <b>B’s blocks are copied, not moved</b> — B keeps its own</td></tr>
+        <tr><td class="kind">Table</td><td class="means">A’s rows, then B’s, dropping a row identical to one above it</td></tr>
+        <tr><td class="kind">Plain text, rich text</td><td class="means">A’s text, a separator, then B’s</td></tr>
+        <tr class="no"><td class="kind">Dates, numbers, switches, dropdowns</td><td class="means">Nothing sensible, so it is not offered</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Glue</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-glue</div>
+</section>
+
+<!-- 4 · Repointing ========================================================= -->
+<section class="slide feature" data-n="4">
+  <div class="inner">
+    <div class="copy" style="width: 640px;">
+      <div class="eyebrow"><span class="rule"></span> Repointing <span class="pro">Pro</span></div>
+      <h2 style="font-size: 96px; margin-bottom: 30px;">Nothing left<br>linking to<br>the trash</h2>
+      <p class="lede" style="max-width: 600px; font-size: 30px;">Every entry, category or asset that related to the retired source is re-saved to relate to the merged entry instead.</p>
+      <ul class="points">
+        <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8FB0F0" stroke-width="3"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg> <span>In place, keeping each field’s order</span></li>
+        <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8FB0F0" stroke-width="3"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg> <span>Above a threshold, it goes to the queue</span></li>
+      </ul>
+    </div>
+  </div>
+  <div class="rewire">
+    <div class="row"><div class="node src"><small>Event</small>Storytelling for under-fives</div><div class="arrowline"></div><div class="node target"><small>Merged entry</small>Riverside Library reopens…</div></div>
+    <div class="row"><div class="node src"><small>Event</small>Maker space taster</div><div class="arrowline"></div><div class="node target"><small>Merged entry</small>Riverside Library reopens…</div></div>
+    <div class="row"><div class="node src"><small>Event</small>Ribbon cutting</div><div class="arrowline"></div><div class="node target"><small>Merged entry</small>Riverside Library reopens…</div></div>
+    <div class="row" style="justify-content: flex-end;"><div class="node retired"><small style="text-decoration: none;">Retired</small>Riverside Library Reopening</div></div>
+    <div class="note"><b>A real element save, not an UPDATE.</b> Since Craft 5.3 a relation lives in the element’s content column — editing only the <span class="mono">relations</span> table would leave templates rendering nothing. Reference tags in rich text are counted and reported, not rewritten.</div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Glue</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-glue</div>
+</section>
+
+<!-- 5 · Starting a merge (two real screenshots) ========================== -->
+<section class="slide pair" data-n="5">
+  <div class="inner">
+    <div class="eyebrow"><span class="rule"></span> Starting a merge</div>
+    <h2>Pick two, or let it find them</h2>
+    <p class="lede">Two entries in any index, then <b style="color: var(--off-white);">Merge with Glue…</b> — or let the duplicate finder list the pairs.</p>
+    <div class="panes">
+      <div class="pane index">
+        <div class="caption"><b>Any entry index</b> · the actions menu</div>
+        <figure class="cpc-frame">
+          <div class="cpc-chrome"><b></b><b></b><b></b><em>Entries → News</em></div>
+          <img src="shots/glue-index.png" alt="">
+        </figure>
+      </div>
+      <div class="pane">
+        <div class="caption"><b>Glue → Duplicates</b> <span class="pro">Pro</span></div>
+        <figure class="cpc-frame">
+          <div class="cpc-chrome"><b></b><b></b><b></b><em>Glue → Duplicates</em></div>
+          <img src="shots/glue-duplicates.png" alt="">
+        </figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 · History (real CP screenshot) ===================================== -->
+<section class="slide cpcard" data-n="6">
+  <div class="cpc-inner">
+    <div class="cpc-copy">
+      <div class="cpc-eyebrow"><i></i> The history</div>
+      <h2 class="cpc-h2">What happened<br>to the old one?</h2>
+      <p class="cpc-lede">A merged entry looks exactly like one somebody typed. Glue records every merge, so six weeks later there is an answer.</p>
+      <ul class="cpc-points">
+        <li>What went in, what came out, and who did it</li>
+        <li>What they chose, and what it warned about</li>
+        <li>Shown on the edit screen of every entry involved</li>
+      </ul>
+    </div>
+    <div class="cpc-panel">
+      <figure class="cpc-frame">
+        <div class="cpc-chrome"><b></b><b></b><b></b><em>Glue → History</em></div>
+        <img src="shots/glue-history.png" alt="">
+      </figure>
+    </div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Glue</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-glue</div>
+</section>
+
+<!-- 7 · Editions =========================================================== -->
+<section class="slide closing" data-n="7">
+  <div class="inner">
+    <div class="eyebrow"><span class="rule"></span> Editions</div>
+    <h2>Lite is a complete merge tool</h2>
+    <p class="lede">An editor cleaning up a dozen duplicates by hand never meets a paywall. Pro is for the things that only arrive with volume.</p>
+    <div class="eds">
+      <div class="ed">
+        <header><b>Lite</b><span>$59</span></header>
+        <ul>
+          <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8FB0F0" stroke-width="3"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg> Merge two entries, field by field</li>
+          <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8FB0F0" stroke-width="3"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg> Every “Both” strategy</li>
+          <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8FB0F0" stroke-width="3"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg> New entry, or merge into a source</li>
+          <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8FB0F0" stroke-width="3"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg> Disable or trash the originals</li>
+          <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8FB0F0" stroke-width="3"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg> Merge history and audit</li>
+        </ul>
+      </div>
+      <div class="ed pro">
+        <header><b>Pro</b><span>$79</span></header>
+        <ul>
+          <li class="all">Everything in Lite, plus</li>
+          <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffd166" stroke-width="3"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg> Repoint inbound relations</li>
+          <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffd166" stroke-width="3"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg> Duplicate finder</li>
+          <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffd166" stroke-width="3"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg> Merge presets, deployed with project config</li>
+          <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffd166" stroke-width="3"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg> Merge every site at once · console commands</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Glue</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-glue</div>
+</section>
+
+<script>
+  var n = new URLSearchParams(location.search).get('s');
+  if (n) {
+    document.body.classList.add('single');
+    var el = document.querySelector('.slide[data-n="' + n + '"]');
+    if (el) el.classList.add('active');
+  }
+</script>
+</body>
+</html>

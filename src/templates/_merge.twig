@@ -332,7 +332,7 @@
         {% endif %}
     </div>
 
-    {% if plugin.canManagePresets() %}
+    {% if plugin.canManagePresets() and craft.app.config.general.allowAdminChanges %}
         <div class="glue-panel">
             <h2>{{ "Save these choices"|t('glue') }}</h2>
             <div class="glue-preset-save">
