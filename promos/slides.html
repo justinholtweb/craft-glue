@@ -212,7 +212,8 @@
   .ed.pro { border-color: rgba(143,176,240,0.55); background: rgba(46, 91, 186, 0.18); }
   .ed header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 22px; }
   .ed header b { font-family: 'Jersey 20', sans-serif; font-weight: 400; font-size: 64px; }
-  .ed header span { font-size: 40px; font-weight: 700; color: var(--gold); }
+  .ed header span { font-size: 40px; font-weight: 700; color: var(--gold); text-align: right; }
+  .ed header small { display: block; font-size: 22px; font-weight: 500; opacity: .75; }
   .ed ul { list-style: none; display: flex; flex-direction: column; gap: 13px; }
   .ed li { display: flex; gap: 14px; font-size: 24px; line-height: 1.4; color: rgba(240,240,245,0.72); }
   .ed li svg { flex: 0 0 auto; margin-top: 5px; }
@@ -381,7 +382,7 @@
     <p class="lede">An editor cleaning up a dozen duplicates by hand never meets a paywall. Pro is for the things that only arrive with volume.</p>
     <div class="eds">
       <div class="ed">
-        <header><b>Lite</b><span>$59</span></header>
+        <header><b>Lite</b><span>$59<small>then $49/year</small></span></header>
         <ul>
           <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8FB0F0" stroke-width="3"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg> Merge two entries, field by field</li>
           <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8FB0F0" stroke-width="3"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg> Every “Both” strategy</li>
@@ -391,7 +392,7 @@
         </ul>
       </div>
       <div class="ed pro">
-        <header><b>Pro</b><span>$79</span></header>
+        <header><b>Pro</b><span>$79<small>then $69/year</small></span></header>
         <ul>
           <li class="all">Everything in Lite, plus</li>
           <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffd166" stroke-width="3"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg> Repoint inbound relations</li>

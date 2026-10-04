@@ -5,8 +5,9 @@
 Glue merges two Craft entries into one. An editor selects exactly two entries in an entry index,
 picks a winner field by field (or "both", where both means something), and Glue writes the result
 to a new entry or into one of the two sources. Pro then repoints everything that pointed at the
-entry that was retired. Distributed as `justinholtweb/craft-glue`. **Paid, Lite/Pro** — Lite $59,
-Pro $79.
+entry that was retired. Distributed as `justinholtweb/craft-glue`. **Paid, Lite/Pro** — Lite $59
+($49/year renewal), Pro $79 ($69/year renewal). Prices are charged from id.craftcms.com; the
+plugin-marketing-site skill in `~/Sites/justinholt` lists every other place they appear.
 
 ## Tech Stack
 

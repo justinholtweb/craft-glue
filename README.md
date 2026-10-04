@@ -117,9 +117,9 @@ dozen duplicates by hand never meets a paywall.
 | Console commands | | ✅ |
 | Duplicate finder | | ✅ |
 
-Lite $59 · Pro $79. Nothing downgrades silently: a lapsed Pro licence keeps every merge it has
-already made — merged entries are ordinary entries — and the Pro controls refuse with a reason
-rather than quietly doing something else.
+Lite $59, then $49/year · Pro $79, then $69/year. Nothing downgrades silently: a lapsed Pro
+licence keeps every merge it has already made — merged entries are ordinary entries — and the Pro
+controls refuse with a reason rather than quietly doing something else.
 
 ## From the command line — Pro
 
