@@ -1,7 +1,6 @@
 {
     "name": "justinholtweb/craft-glue",
     "description": "Merge two entries into one in Craft CMS — pick a winner field by field, combine what can be combined, and repoint everything that pointed at the entry you retired.",
-    "version": "5.0.0",
     "type": "craft-plugin",
     "keywords": [
         "craftcms",
@@ -14,6 +13,7 @@
         "editorial"
     ],
     "license": "proprietary",
+    "homepage": "https://justinholt.com/plugins/craft-glue",
     "authors": [
         {
             "name": "Justin Holt",
@@ -22,6 +22,7 @@
     ],
     "support": {
         "email": "justin@justinholt.com",
+        "docs": "https://justinholt.com/plugins/craft-glue/docs",
         "issues": "https://github.com/justinholtweb/craft-glue/issues",
         "source": "https://github.com/justinholtweb/craft-glue"
     },
@@ -32,10 +33,20 @@
         "ext-json": "*",
         "craftcms/cms": "^5.3.0"
     },
+    "require-dev": {
+        "craftcms/ecs": "dev-main",
+        "craftcms/phpstan": "dev-main",
+        "phpstan/phpstan": "^1.12 || ^2.2"
+    },
     "autoload": {
         "psr-4": {
             "justinholtweb\\glue\\": "src/"
         }
+    },
+    "scripts": {
+        "check-cs": "ecs check --ansi",
+        "fix-cs": "ecs check --fix --ansi",
+        "phpstan": "phpstan --memory-limit=1G"
     },
     "config": {
         "allow-plugins": {
@@ -48,10 +59,13 @@
         "handle": "glue",
         "developer": "Justin Holt",
         "developerUrl": "https://justinholt.com",
-        "documentationUrl": "https://github.com/justinholtweb/craft-glue/blob/main/README.md",
+        "documentationUrl": "https://justinholt.com/plugins/craft-glue/docs",
         "changelogUrl": "https://raw.githubusercontent.com/justinholtweb/craft-glue/main/CHANGELOG.md",
         "hasCpSettings": true,
         "class": "justinholtweb\\glue\\Plugin",
-        "editions": ["lite", "pro"]
+        "editions": [
+            "lite",
+            "pro"
+        ]
     }
 }

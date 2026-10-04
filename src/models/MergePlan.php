@@ -17,6 +17,9 @@ use craft\base\Model;
  */
 class MergePlan extends Model
 {
+    /** More field choices than any real layout has; the cap on what a request may post. */
+    public const MAX_CHOICES = 500;
+
     public const TITLE_A = 'a';
     public const TITLE_B = 'b';
     public const TITLE_CUSTOM = 'custom';
@@ -117,14 +120,25 @@ class MergePlan extends Model
             [['statusFrom'], 'in', 'range' => [self::STATUS_A, self::STATUS_B, self::STATUS_ENABLED, self::STATUS_DISABLED]],
             [['parentFrom'], 'in', 'range' => [self::PARENT_A, self::PARENT_B, self::PARENT_NONE]],
             [['bId'], 'compare', 'compareAttribute' => 'aId', 'operator' => '!=',
-                'message' => \Craft::t('glue', 'An entry cannot be merged with itself.')],
+                'message' => \Craft::t('glue', 'An entry cannot be merged with itself.'), ],
             [['choices'], 'validateChoices'],
         ];
     }
 
     public function validateChoices(): void
     {
-        foreach ($this->choices as $handle => $strategy) {
+        // The @var above is what a valid plan holds; this is the check that makes it true, so it
+        // has to treat the posted value as anything at all.
+        /** @var array<mixed, mixed> $posted */
+        $posted = $this->choices;
+
+        // A plan has one choice per field. Far more than any layout holds is not a plan.
+        if (count($posted) > self::MAX_CHOICES) {
+            $this->addError('choices', \Craft::t('glue', 'A plan cannot have more than {max} field choices.', ['max' => self::MAX_CHOICES]));
+            return;
+        }
+
+        foreach ($posted as $handle => $strategy) {
             if (!is_string($strategy) || !Strategy::isValid($strategy)) {
                 $this->addError('choices', \Craft::t('glue', '“{strategy}” is not a merge strategy.', [
                     'strategy' => is_string($strategy) ? $strategy : gettype($strategy),
@@ -132,8 +146,10 @@ class MergePlan extends Model
                 return;
             }
 
-            if (!is_string($handle) || $handle === '') {
-                $this->addError('choices', \Craft::t('glue', 'A field choice was posted with no field handle.'));
+            // The shape of a Craft field handle. Presets write these as project config keys,
+            // where a dot would open a new level of the tree.
+            if (!is_string($handle) || !preg_match('/^[a-zA-Z][a-zA-Z0-9_]*$/', $handle)) {
+                $this->addError('choices', \Craft::t('glue', 'A field choice was posted without a valid field handle.'));
                 return;
             }
         }

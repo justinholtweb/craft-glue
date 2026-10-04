@@ -6,6 +6,7 @@ namespace justinholtweb\glue\services;
 
 use Craft;
 use craft\db\Query;
+use craft\elements\Entry;
 use craft\helpers\Db;
 use craft\helpers\Json;
 use DateTime;
@@ -165,6 +166,82 @@ class History extends Component
             ->where(['or', ['targetId' => $entryId], ['aId' => $entryId], ['bId' => $entryId]])
             ->orderBy(['dateCreated' => SORT_DESC])
             ->all();
+    }
+
+    /**
+     * Hides what the history says about entries the current user cannot view.
+     *
+     * A history row copies titles in at merge time, so it outlives the entries — that is the
+     * point of it, and a merge whose entries are all gone keeps its titles. An entry that still
+     * exists is different: it has permissions, and the history must not be a way round them. Its
+     * title is replaced, and the row's warnings go too, since they quote titles. The console has
+     * no user and sees everything.
+     *
+     * @param array<int, array<string, mixed>> $rows
+     * @return array<int, array<string, mixed>>
+     */
+    public function masked(array $rows): array
+    {
+        $user = Craft::$app->getUser()->getIdentity();
+
+        if ($user === null) {
+            return $rows;
+        }
+
+        $ids = [];
+
+        foreach ($rows as $row) {
+            foreach (['targetId', 'aId', 'bId'] as $key) {
+                if (!empty($row[$key])) {
+                    $ids[] = (int)$row[$key];
+                }
+            }
+        }
+
+        if ($ids === []) {
+            return $rows;
+        }
+
+        $elements = Craft::$app->getElements();
+        $hidden = [];
+
+        foreach (Entry::find()->id(array_unique($ids))->siteId('*')->unique()->status(null)->trashed(null)->all() as $entry) {
+            try {
+                $visible = $elements->canView($entry, $user);
+            } catch (Throwable) {
+                // An entry whose section was deleted cannot answer. Nobody can open it either.
+                $visible = false;
+            }
+
+            if (!$visible) {
+                $hidden[(int)$entry->id] = true;
+            }
+        }
+
+        if ($hidden === []) {
+            return $rows;
+        }
+
+        $placeholder = Craft::t('glue', 'an entry you cannot view');
+
+        foreach ($rows as &$row) {
+            $masked = false;
+
+            foreach (['targetId' => 'targetTitle', 'aId' => 'aTitle', 'bId' => 'bTitle'] as $idKey => $titleKey) {
+                if (isset($hidden[(int)($row[$idKey] ?? 0)])) {
+                    $row[$idKey] = null;
+                    $row[$titleKey] = $placeholder;
+                    $masked = true;
+                }
+            }
+
+            if ($masked) {
+                $row['warnings'] = null;
+                $row['plan'] = null;
+            }
+        }
+
+        return $rows;
     }
 
     /**

@@ -538,7 +538,7 @@ class Merger extends Component
     private function retireEach(MergePlan $plan, MergeResult $result, ElementsService $elements, ?int $survivorId): void
     {
         foreach ($plan->retiredIds() as $id) {
-            if ($id === null || $id === $survivorId || $id === $result->entry?->id) {
+            if ($id === $survivorId || $id === $result->entry?->id) {
                 continue;
             }
 
@@ -605,7 +605,25 @@ class Merger extends Component
             throw new InvalidArgumentException(Craft::t('glue', 'You are not allowed to save the merged entry.'));
         }
 
-        if ($plan->disposition === Settings::DISPOSITION_LEAVE) {
+        // "Every site" writes to sites the form never showed. canSave() does not look at sites, so
+        // each one is checked here — and refused rather than skipped, because a merge that landed
+        // in three sites of four is the half-done merge this plugin will not make.
+        if ($plan->allSites && Craft::$app->getIsMultiSite()) {
+            foreach ($pair->sharedSiteIds as $siteId) {
+                $site = Craft::$app->getSites()->getSiteById($siteId, true);
+
+                if ($site !== null && !$user->can("editSite:$site->uid")) {
+                    throw new InvalidArgumentException(Craft::t('glue', 'You are not allowed to edit the {site} site, so the merge cannot be repeated in every site.', [
+                        'site' => $site->getName(),
+                    ]));
+                }
+            }
+        }
+
+        // Leaving the sources alone needs nothing more — unless their inbound relations are
+        // moving. Taking over everything that points at an entry is a bigger change to it than
+        // disabling it, so it needs at least the right to edit it.
+        if ($plan->disposition === Settings::DISPOSITION_LEAVE && !$plan->rewire) {
             return;
         }
 

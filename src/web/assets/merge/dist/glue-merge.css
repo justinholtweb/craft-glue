@@ -239,7 +239,13 @@
 .glue-attributes {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 0 24px;
+  gap: 24px;
+}
+
+/* Craft spaces consecutive fields with a margin-top on `.field + .field`, which in a grid pushes
+   every field but the first one down a step. Spacing comes from the grid instead. */
+.glue-attributes > .field {
+  margin: 0;
 }
 
 .glue-preset-save {

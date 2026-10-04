@@ -46,7 +46,7 @@
     {% elseif groups|length %}
         {% for group in groups %}
             <div class="glue-group">
-                <h3>{{ group.value }} <span class="light">({{ group.count }})</span></h3>
+                <h3>{{ group.value }} <span class="light">({{ group.entries|length }})</span></h3>
 
                 <div class="glue-group-entries">
                     {% for entry in group.entries %}

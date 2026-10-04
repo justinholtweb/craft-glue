@@ -7,7 +7,6 @@ namespace justinholtweb\glue\services;
 use Craft;
 use craft\base\FieldInterface;
 use craft\elements\Entry;
-use craft\errors\InvalidFieldException;
 use craft\helpers\ElementHelper;
 use craft\models\EntryType;
 use craft\models\FieldLayout;
@@ -92,6 +91,18 @@ class Pairs extends Component
         if ($entry->fieldId !== null) {
             throw new InvalidArgumentException(Craft::t('glue', '“{title}” is a nested entry inside a field. Glue merges entries, not the blocks inside them.', [
                 'title' => $entry->title ?? (string)$id,
+            ]));
+        }
+
+        // Every screen that shows a pair shows its field values, so loading one is reading it.
+        // Without this an editor could name an entry from a section they cannot see as the other
+        // half, read it in the preview and copy it into one they own. The console has no user and
+        // is trusted, as in Merger::assertAllowed().
+        $user = Craft::$app->getUser()->getIdentity();
+
+        if ($user !== null && !Craft::$app->getElements()->canView($entry, $user)) {
+            throw new InvalidArgumentException(Craft::t('glue', 'You are not allowed to view entry {id}.', [
+                'id' => $id,
             ]));
         }
 
@@ -214,11 +225,23 @@ class Pairs extends Component
             return $pair->b?->getType();
         }
 
+        // Only a type the target section actually uses, in a section this user can edit. Anything
+        // else could never be saved — Craft validates the type against the section — and showing
+        // its layout would hand out the field names of a section the user has no access to.
         if ($plan->entryTypeId !== null) {
-            $entryType = Craft::$app->getEntries()->getEntryTypeById($plan->entryTypeId);
+            $entries = Craft::$app->getEntries();
+            $section = $entries->getSectionById((int)($plan->sectionId ?? $pair->a?->sectionId));
+            $user = Craft::$app->getUser()->getIdentity();
 
-            if ($entryType !== null) {
-                return $entryType;
+            if (
+                $section !== null
+                && ($user === null || in_array($section->id, $entries->getEditableSectionIds(), true))
+            ) {
+                foreach ($section->getEntryTypes() as $entryType) {
+                    if ($entryType->id === $plan->entryTypeId) {
+                        return $entryType;
+                    }
+                }
             }
         }
 
@@ -260,7 +283,7 @@ class Pairs extends Component
     {
         try {
             return $field->serializeValue($entry->getFieldValue((string)$field->handle), $entry);
-        } catch (InvalidFieldException | Throwable $e) {
+        } catch (Throwable $e) {
             Craft::warning(sprintf(
                 'Could not read the “%s” field off entry %d: %s',
                 $field->handle,
@@ -359,14 +382,14 @@ class Pairs extends Component
             $pair->warnings[] = Craft::t('glue', 'These entries are different entry types — {a} and {b}. The merged entry will be {target}.', [
                 'a' => $a->getType()->name,
                 'b' => $b->getType()->name,
-                'target' => $entryType?->name ?? '?',
+                'target' => $entryType->name ?? '?',
             ]);
         }
 
         if ($a->sectionId !== $b->sectionId) {
             $pair->warnings[] = Craft::t('glue', 'These entries are in different sections — {a} and {b}.', [
-                'a' => $a->getSection()?->name ?? '?',
-                'b' => $b->getSection()?->name ?? '?',
+                'a' => $a->getSection()->name ?? '?',
+                'b' => $b->getSection()->name ?? '?',
             ]);
         }
 

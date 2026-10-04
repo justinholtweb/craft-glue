@@ -26,17 +26,20 @@ means something, and write the result to a new entry or into one of the two you 
 - Disposition of the originals: leave, disable, or move to the trash.
 - A merge history, with the titles copied into each row so it still reads after the entries are
   gone, plus a note on the edit screen of any entry that was part of a merge.
-- Three permissions, on top of Craft's own.
+- Three permissions, on top of Craft's own — which still decide everything: both entries must be
+  viewable, the merged entry savable, and the retired entries deletable or savable. The duplicate
+  finder and the history show only entries the user can view.
 - `EVENT_BEFORE_MERGE` (cancellable) and `EVENT_AFTER_MERGE`.
 
 ### Added — Pro
 
 - Repointing every relation that targeted a retired entry at the merged one, through real element
-  saves so the content column and the `relations` table agree, queued above a threshold.
+  saves so the content column and the `relations` table agree, queued above a threshold. Only
+  elements and sites the merging user could edit are changed; the rest are counted and left alone.
 - A count of reference tags naming a retired entry, which Glue does not rewrite and says so.
-- Merge presets, stored in project config.
+- Merge presets, stored in project config, and so saved only where admin changes are allowed.
 - Merging every site the two entries share, resolving each site's own values rather than
-  propagating one site's.
+  propagating one site's. Refused unless the user can edit every one of those sites.
 - `glue/merge`, `glue/duplicates` and `glue/rewire` console commands, plus `glue/inspect`, which
   is free.
 - A duplicate finder for entries sharing a title or a slug.

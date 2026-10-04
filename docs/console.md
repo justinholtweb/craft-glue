@@ -1,4 +1,9 @@
-# Console commands
+---
+title: Console commands
+slug: console
+order: 50
+summary: merge, inspect, duplicates and rewire from the command line.
+---
 
 All of these are **Pro**, except `glue/inspect`, which writes nothing and is free — being able to
 ask "what would merging these two do" without a licence is how you decide whether you want one.

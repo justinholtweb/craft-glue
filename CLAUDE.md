@@ -130,6 +130,22 @@ under.
   that process.
 - **`$(printf '…\n\n')` strips trailing newlines.** Use `$'…\n\n'` when posting a separator.
 - Craft has **no `plugin/switch-edition` console command**; `tests/integration/edition.php` is it.
+- **`canSave()` does not check sites.** Craft's element editor checks `editSite:{uid}` separately.
+  Anything that writes outside the site on screen — "every site", rewiring — checks it itself.
+- **Every write outside the pair is the user's write.** Rewiring saves elements nobody opened, so
+  it filters by `canSave` + `editSite` for a logged-in user (the queue job carries `userId` for
+  this), and `leave` + rewire still needs edit rights on the retired entries. Loading a pair is a
+  read, so it needs `canView` on both. The console has no user and is trusted throughout.
+- **Presets are project config**: saved only where `allowAdminChanges` is on, and choice keys must
+  look like field handles, because a dot in a key nests the config path.
+- **CKEditor implements `ElementContainerFieldInterface` whether or not it embeds anything.** A
+  container check alone refused "Both" on every CKEditor field. Prose with no `<craft-entry>` in
+  either value is joined as text; one that embeds an entry is still refused.
+- **`strip_tags()` runs paragraphs together** ("history.The work"). Previews space block tags
+  first.
+- **Two smoke runs at once flip each other's edition.** `cp-smoke.sh` switches Pro → Lite →
+  restore on the shared test site; anything else using that site at the same time (screenshots,
+  a second run) sees the wrong edition and the Lite-boundary checks fail.
 
 See also `[[craft-plugin-gotchas]]` in the shared memory for family-wide traps.
 
@@ -139,9 +155,13 @@ No local PHP on this Mac. Everything runs inside the plugin-testing container.
 
 ```sh
 cd ~/Sites/plugin-testing
-ddev exec php /var/www/craft-glue/tests/integration/checks.php      # 84 checks
+ddev exec php /var/www/craft-glue/tests/integration/checks.php      # 91 checks
 ddev exec bash /var/www/craft-glue/tests/integration/cp-smoke.sh    # screens + write paths
 ddev exec bash -c 'find /var/www/craft-glue/src -name "*.php" -print0 | xargs -0 -n1 php -l'
+
+cd ~/Sites/phpstan-runner                                           # PHP 8.4, ~/Sites at /sites
+ddev exec -d /sites/craft-glue composer phpstan                     # level 5, clean
+ddev exec -d /sites/craft-glue composer check-cs                    # craftcms/ecs
 ```
 
 `checks.php` builds its own section, two entry types, a Matrix block type and eight fields, then

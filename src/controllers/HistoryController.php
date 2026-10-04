@@ -50,7 +50,7 @@ class HistoryController extends Controller
 
         return $this->renderTemplate('glue/_history', [
             'plugin' => Plugin::getInstance(),
-            'rows' => $this->decorate($rows),
+            'rows' => $this->decorate($history->masked($rows)),
             'page' => $page,
             'pages' => (int)ceil($total / self::PER_PAGE),
             'total' => $total,
@@ -114,9 +114,20 @@ class HistoryController extends Controller
         $entries = array_filter($entries, fn(Entry $entry) => $this->isRenderable($entry));
 
         foreach ($rows as &$row) {
-            $row['targetEntry'] = $entries[$row['targetId'] ?? 0] ?? null;
-            $row['aEntry'] = $entries[$row['aId'] ?? 0] ?? null;
-            $row['bEntry'] = $entries[$row['bId'] ?? 0] ?? null;
+            foreach (['target', 'a', 'b'] as $side) {
+                $entry = $entries[$row[$side . 'Id'] ?? 0] ?? null;
+
+                // A chip shows the status the entry had before it was trashed — a green dot on
+                // something the merge threw away. The stored title, marked, says what happened.
+                if ($entry?->trashed) {
+                    $row[$side . 'Title'] = Craft::t('glue', '{title} (trashed)', [
+                        'title' => $row[$side . 'Title'] ?? $entry->title,
+                    ]);
+                    $entry = null;
+                }
+
+                $row[$side . 'Entry'] = $entry;
+            }
 
             try {
                 $row['planData'] = $row['plan'] ? Json::decode($row['plan']) : [];

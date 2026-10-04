@@ -1,4 +1,9 @@
-# Installation
+---
+title: Installation
+slug: installation
+order: 10
+summary: Requirements, install, editions, and the three permissions.
+---
 
 ## Requirements
 
@@ -44,6 +49,19 @@ user must be able to save the merged entry; a merge that trashes its sources is 
 must be able to delete those too. Glue checks both with Craft's own `canSave()` and `canDelete()`
 before it writes anything — a plugin permission that let somebody write to a section they cannot
 otherwise write to would be a hole, not a feature.
+
+The same rule reaches everything else a merge touches:
+
+- **Both entries must be viewable.** Loading a pair shows their values, so it is reading them.
+- **Rewiring needs the right to edit the retired entries**, even when they are left in place, and
+  only changes elements — and sites — the user could have edited by hand. The rest are left alone
+  and counted in the result.
+- **Merging in every site needs every one of those sites.** If one is not editable, the merge is
+  refused rather than done in some sites and not others.
+- **The duplicate finder and the history** only show entries the user can view. A history row
+  whose entry still exists but is out of reach says “an entry you cannot view”.
+
+Console commands run with no user and are not limited by any of this.
 
 Admins have all three.
 

@@ -1,4 +1,9 @@
-# Troubleshooting
+---
+title: Troubleshooting
+slug: troubleshooting
+order: 60
+summary: When the action is missing, a merge is refused, or a reference survives.
+---
 
 ### “Merge with Glue…” is not in the actions menu
 
@@ -62,6 +67,24 @@ to. `php craft glue/rewire --from=<id> --to=<id>` reports the same count indepen
 to check.
 
 Relations created by reference tags in rich text are not counted, because they are not relations.
+
+### Rewiring left some elements alone
+
+The result says how many elements pointed at a retired entry but were not yours to edit. Rewiring
+only saves what the merging user could have saved by hand, in sites they can edit. Ask somebody
+with access to run the merge, or rewire the rest from the console, which has no such limit:
+`php craft glue/rewire --from=<id> --to=<id>`.
+
+### “You are not allowed to edit the … site”
+
+**Merge in every site** writes to every site the two entries share, so it needs edit access to all
+of them. Merge in the sites you can edit one at a time, or ask somebody with access to all of them.
+
+### Saving a preset says admin changes are turned off
+
+Presets are project config, and project config can only be changed where `allowAdminChanges` is
+on. Save the preset in development, commit the YAML and deploy it. Saved presets can still be
+*used* everywhere; the **Save these choices** panel is simply hidden where they cannot be saved.
 
 ### Rewiring is slow, or times out
 

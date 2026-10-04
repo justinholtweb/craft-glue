@@ -9,6 +9,7 @@ use craft\base\ElementInterface;
 use craft\db\Query;
 use craft\db\Table as CraftTable;
 use craft\elements\db\ElementQueryInterface;
+use craft\elements\User;
 use craft\fields\BaseRelationField;
 use justinholtweb\glue\jobs\RewireRelations;
 use justinholtweb\glue\models\MergeResult;
@@ -45,6 +46,14 @@ use yii\base\Component;
  * way. Glue does not rewrite those — that is a content search-and-replace, not a relation — but
  * it does count them and say so, because "it rewired everything" and "it rewired everything it
  * can see" are very different promises to make to somebody about to empty the trash.
+ *
+ * ## Only what the user could have edited by hand
+ *
+ * A rewire saves elements nobody opened — potentially every page that links to the retired entry,
+ * in any section and any site. Run for a logged-in user, it changes only the elements and sites
+ * that user could have changed themselves, and says how many it left alone. Otherwise a merge
+ * would be a way to put your entry into pages you cannot edit. The console has no user and is
+ * trusted, as it is everywhere else in the plugin.
  */
 class Rewirer extends Component
 {
@@ -63,6 +72,20 @@ class Rewirer extends Component
         }
 
         $sourceIds = $this->referencingElementIds($retiredIds);
+        $user = Craft::$app->getUser()->getIdentity();
+
+        if ($user !== null) {
+            $editable = array_values(array_filter($sourceIds, fn(int $id) => $this->canRewire($id, $user)));
+            $skipped = count($sourceIds) - count($editable);
+            $sourceIds = $editable;
+
+            if ($skipped > 0 && $result !== null) {
+                $result->addWarning(Craft::t('glue', '{n, plural, =1{One element points} other{# elements point}} at a retired entry but {n, plural, =1{is} other{are}} not yours to edit, so {n, plural, =1{it was} other{they were}} left alone.', [
+                    'n' => $skipped,
+                ]));
+            }
+        }
+
         $threshold = Plugin::getInstance()->getSettings()->rewireThreshold;
 
         if ($result !== null) {
@@ -80,6 +103,7 @@ class Rewirer extends Component
                 'elementIds' => $sourceIds,
                 'retiredIds' => $retiredIds,
                 'survivorId' => $survivorId,
+                'userId' => $user?->id,
             ]));
 
             if ($result !== null) {
@@ -93,7 +117,7 @@ class Rewirer extends Component
         $rewired = 0;
 
         foreach ($sourceIds as $sourceId) {
-            if ($this->rewireElement($sourceId, $retiredIds, $survivorId)) {
+            if ($this->rewireElement($sourceId, $retiredIds, $survivorId, $user)) {
                 $rewired++;
             }
         }
@@ -150,8 +174,10 @@ class Rewirer extends Component
      * entry in one locale costs one save and not five.
      *
      * @param int[] $retiredIds
+     * @param User|null $user Who asked for the rewire; sites and elements they cannot edit are
+     * skipped. Null for the console, which is not checked.
      */
-    public function rewireElement(int $elementId, array $retiredIds, int $survivorId): bool
+    public function rewireElement(int $elementId, array $retiredIds, int $survivorId, ?User $user = null): bool
     {
         $elementsService = Craft::$app->getElements();
         $type = $elementsService->getElementTypeById($elementId);
@@ -185,6 +211,10 @@ class Rewirer extends Component
                 continue;
             }
 
+            if ($user !== null && !$this->userCanEdit($element, $user)) {
+                continue;
+            }
+
             if (!$this->rewriteFields($element, $retiredIds, $survivorId)) {
                 continue;
             }
@@ -204,6 +234,56 @@ class Rewirer extends Component
         }
 
         return $changed;
+    }
+
+    /**
+     * Whether the user could save this element in at least one site — the up-front filter, so the
+     * count the user is told and the queue threshold both measure what will really happen.
+     */
+    private function canRewire(int $elementId, User $user): bool
+    {
+        $type = Craft::$app->getElements()->getElementTypeById($elementId);
+
+        if ($type === null) {
+            return false;
+        }
+
+        /** @var class-string<ElementInterface> $type */
+        $elements = $type::find()
+            ->id($elementId)
+            ->site('*')
+            ->status(null)
+            ->drafts(null)
+            ->revisions(false)
+            ->trashed(null)
+            ->all();
+
+        foreach ($elements as $element) {
+            if ($this->userCanEdit($element, $user)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Craft's own test for editing an element in a site: permission on the element, and on the
+     * site, which `canSave()` does not check by itself.
+     */
+    private function userCanEdit(ElementInterface $element, User $user): bool
+    {
+        if (!Craft::$app->getElements()->canSave($element, $user)) {
+            return false;
+        }
+
+        if (!Craft::$app->getIsMultiSite()) {
+            return true;
+        }
+
+        $site = Craft::$app->getSites()->getSiteById((int)$element->siteId, true);
+
+        return $site !== null && $user->can("editSite:$site->uid");
     }
 
     /**
@@ -368,7 +448,7 @@ class Rewirer extends Component
 
         return [Craft::t('glue', '{n, plural, =1{One field mentions} other{# fields mention}} a retired entry with a reference tag. Glue does not rewrite reference tags — search for “{tag}” before deleting anything for good.', [
             'n' => (int)$count,
-            'tag' => $needles[0] ?? '',
+            'tag' => $needles[0],
         ])];
     }
 }

@@ -284,7 +284,7 @@ class Plugin extends BasePlugin
             }
 
             try {
-                $merges = $this->history->forEntry((int)$entry->getCanonicalId());
+                $merges = $this->history->masked($this->history->forEntry((int)$entry->getCanonicalId()));
             } catch (Throwable) {
                 return;
             }

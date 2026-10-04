@@ -1,4 +1,9 @@
-# How merging works
+---
+title: How merging works
+slug: how-merging-works
+order: 30
+summary: What Glue does to the database — copying values, nested entries, and rewiring.
+---
 
 This page is for the person who wants to know what Glue is doing to their database before they let
 it. Nothing here is needed to use the plugin.

@@ -1,4 +1,9 @@
-# FAQ
+---
+title: FAQ
+slug: faq
+order: 70
+summary: Short answers to the questions that come up before buying.
+---
 
 ### Can I merge more than two entries at once?
 

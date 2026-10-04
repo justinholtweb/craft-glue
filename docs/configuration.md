@@ -1,4 +1,9 @@
-# Configuration
+---
+title: Configuration
+slug: configuration
+order: 40
+summary: Every setting, and overriding them in config/glue.php.
+---
 
 Everything is at **Settings → Plugins → Glue**, and can be overridden in `config/glue.php`.
 
@@ -42,6 +47,10 @@ for prose — check the Result column before you rely on it.
 Off by default **even on Pro**. Rewiring edits other people's entries, and a setting that quietly
 does that on somebody's first merge is a setting that gets the plugin uninstalled. Turn it on once
 you have watched it work.
+
+Rewiring only saves elements the merging user could have saved themselves, in sites they can
+edit. Anything else is skipped and counted in the result, so a merge is never a way to change
+pages the user has no access to. The console is not limited this way.
 
 The threshold exists because each rewire is a full element save — content, relations, search
 index, revision. A few dozen is a slow response; a few thousand is a timed-out one.
